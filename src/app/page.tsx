@@ -56,7 +56,6 @@ export default async function Home() {
                   )}
                 </div>
                 <div className="p-4">
-                  <p className="text-sm text-gray-500 mb-1">{product.brand}</p>
                   <h3 className="font-semibold mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                     {product.name}
                   </h3>

@@ -7,7 +7,6 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<{
     category?: string
-    brand?: string
     sort?: string
   }>
 }) {
@@ -18,10 +17,6 @@ export default async function ProductsPage({
 
   if (params.category) {
     where.categoryId = params.category
-  }
-
-  if (params.brand) {
-    where.brand = params.brand
   }
 
   const orderBy: any = {}
@@ -40,7 +35,7 @@ export default async function ProductsPage({
   }
 
   // 데이터 가져오기
-  const [products, categories, brands] = await Promise.all([
+  const [products, categories] = await Promise.all([
     prisma.product.findMany({
       where,
       include: { category: true },
@@ -49,15 +44,7 @@ export default async function ProductsPage({
     prisma.category.findMany({
       orderBy: { name: 'asc' },
     }),
-    prisma.product.findMany({
-      where: { isActive: true },
-      select: { brand: true },
-      distinct: ['brand'],
-      orderBy: { brand: 'asc' },
-    }),
   ])
-
-  const uniqueBrands = brands.map((b) => b.brand)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -99,34 +86,6 @@ export default async function ProductsPage({
                       }`}
                     >
                       {category.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Brand Filter */}
-              <div className="mb-6">
-                <h3 className="font-semibold mb-3">브랜드</h3>
-                <div className="space-y-2">
-                  <Link
-                    href="/products"
-                    className={`block text-sm hover:text-blue-600 transition-colors ${
-                      !params.brand ? 'text-blue-600 font-semibold' : 'text-gray-700'
-                    }`}
-                  >
-                    전체
-                  </Link>
-                  {uniqueBrands.map((brand) => (
-                    <Link
-                      key={brand}
-                      href={`/products?brand=${brand}`}
-                      className={`block text-sm hover:text-blue-600 transition-colors ${
-                        params.brand === brand
-                          ? 'text-blue-600 font-semibold'
-                          : 'text-gray-700'
-                      }`}
-                    >
-                      {brand}
                     </Link>
                   ))}
                 </div>
@@ -213,7 +172,6 @@ export default async function ProductsPage({
 
                       {/* Product Info */}
                       <div className="p-4">
-                        <p className="text-sm text-gray-500 mb-1">{product.brand}</p>
                         <h3 className="font-semibold mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                           {product.name}
                         </h3>

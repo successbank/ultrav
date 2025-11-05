@@ -3,6 +3,7 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { formatPrice, calculateDiscountedPrice } from '@/lib/utils'
 import AddToCartButton from '@/components/AddToCartButton'
+import AddToWishlistButton from '@/components/AddToWishlistButton'
 import { ChevronDown, Package, Truck, RefreshCw } from 'lucide-react'
 
 interface PageProps {
@@ -99,9 +100,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* Product Info */}
           <div>
-            {/* Brand */}
-            <p className="text-sm text-gray-500 mb-2">{product.brand}</p>
-
             {/* Product Name */}
             <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
 
@@ -164,8 +162,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Add to Cart Button */}
-            <AddToCartButton product={product} />
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <AddToCartButton product={product} />
+              </div>
+              <AddToWishlistButton
+                productId={product.id}
+                productName={product.name}
+              />
+            </div>
 
             {/* Product Info */}
             <div className="mt-8 pt-8 border-t">
@@ -174,10 +180,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <div className="flex">
                   <dt className="w-24 text-gray-600">카테고리</dt>
                   <dd className="text-gray-900">{product.category.name}</dd>
-                </div>
-                <div className="flex">
-                  <dt className="w-24 text-gray-600">브랜드</dt>
-                  <dd className="text-gray-900">{product.brand}</dd>
                 </div>
                 <div className="flex">
                   <dt className="w-24 text-gray-600">상품 ID</dt>
