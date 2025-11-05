@@ -168,16 +168,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <div className="flex-1">
                 <AddToCartButton product={product} />
               </div>
-              <div className="flex gap-4">
-                <AddToWishlistButton
-                  productId={product.id}
-                  productName={product.name}
-                />
-                <ShareButton
-                  url={`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5635'}/products/${product.id}`}
-                  title={product.name}
-                  text={`${product.name} - ${product.brand}`}
-                />
+              <div className="flex gap-4 w-full sm:w-auto">
+                <div className="w-24 h-full">
+                  <AddToWishlistButton
+                    productId={product.id}
+                    productName={product.name}
+                  />
+                </div>
+                <div className="w-24 h-full">
+                  <ShareButton
+                    url={`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5635'}/products/${product.id}`}
+                    title={product.name}
+                    text={`${product.name} - ${product.brand}`}
+                  />
+                </div>
               </div>
             </div>
 

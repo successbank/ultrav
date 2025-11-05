@@ -74,13 +74,16 @@ export default function ShareButton({ url, title, text }: ShareButtonProps) {
     <button
       onClick={handleShare}
       disabled={isSharing}
-      className="flex items-center justify-center gap-2 px-6 py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-500 hover:text-blue-500"
+      className="flex items-center justify-center w-full h-full min-h-[60px] rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-white text-gray-700 border-2 border-gray-300 hover:border-blue-500 hover:text-blue-500"
       aria-label="상품 공유하기"
+      title={isSharing ? '공유 중...' : '공유'}
     >
-      <Share2 size={24} strokeWidth={2} />
-      <span className="font-semibold">
-        {isSharing ? '공유 중...' : '공유'}
-      </span>
+      <div className="flex flex-col items-center justify-center gap-1">
+        <Share2 size={24} strokeWidth={2} />
+        <span className="text-xs font-medium">
+          {isSharing ? '공유중' : '공유'}
+        </span>
+      </div>
     </button>
   )
 }

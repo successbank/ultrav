@@ -105,25 +105,24 @@ export default function AddToWishlistButton({
     <button
       onClick={handleToggleWishlist}
       disabled={isLoading || status === 'loading'}
-      className={`flex items-center justify-center gap-2 px-6 py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`flex items-center justify-center w-full h-full min-h-[60px] rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
         isInWishlist
           ? 'bg-red-500 text-white hover:bg-red-600'
           : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-red-500 hover:text-red-500'
       }`}
       aria-label={isInWishlist ? '찜 목록에서 제거' : '찜 목록에 추가'}
+      title={isLoading ? '처리 중...' : isInWishlist ? '찜 완료' : '찜하기'}
     >
-      <Heart
-        size={24}
-        className={isInWishlist ? 'fill-current' : ''}
-        strokeWidth={2}
-      />
-      <span className="font-semibold">
-        {isLoading
-          ? '처리 중...'
-          : isInWishlist
-          ? '찜 완료'
-          : '찜하기'}
-      </span>
+      <div className="flex flex-col items-center justify-center gap-1">
+        <Heart
+          size={24}
+          className={isInWishlist ? 'fill-current' : ''}
+          strokeWidth={2}
+        />
+        <span className="text-xs font-medium">
+          {isLoading ? '처리중' : '찜하기'}
+        </span>
+      </div>
     </button>
   )
 }
