@@ -29,6 +29,7 @@ model User {
   orders        Order[]
   cart          Cart?
   reviews       Review[]
+  wishlist      Wishlist[]
 
   @@index([email])
   @@map("users")
@@ -120,6 +121,7 @@ model Product {
   cartItems  CartItem[]
   orderItems OrderItem[]
   reviews    Review[]
+  wishlist   Wishlist[]
 
   @@index([categoryId])
   @@index([brand])
@@ -249,4 +251,19 @@ enum ContactStatus {
   PENDING     // 대기중
   IN_PROGRESS // 처리중
   RESOLVED    // 해결됨
+}
+
+// Wishlist Model
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@map("wishlists")
 }
