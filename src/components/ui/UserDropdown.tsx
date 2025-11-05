@@ -2,15 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { User as UserIcon, LogOut, ChevronDown } from 'lucide-react'
+import { User as UserIcon, LogOut, ChevronDown, Shield } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 
 interface UserDropdownProps {
   userName: string
   userEmail?: string
+  userRole?: string
 }
 
-export default function UserDropdown({ userName, userEmail }: UserDropdownProps) {
+export default function UserDropdown({ userName, userEmail, userRole }: UserDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -74,6 +75,18 @@ export default function UserDropdown({ userName, userEmail }: UserDropdownProps)
               <UserIcon size={16} />
               <span>마이페이지</span>
             </Link>
+
+            {/* 관리자 메뉴 - ADMIN 역할일 때만 표시 */}
+            {userRole === 'ADMIN' && (
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              >
+                <Shield size={16} />
+                <span>관리자</span>
+              </Link>
+            )}
 
             <button
               onClick={handleLogout}

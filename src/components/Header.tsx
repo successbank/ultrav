@@ -84,6 +84,7 @@ export default function Header() {
               <UserDropdown
                 userName={session.user.name || session.user.email || '사용자'}
                 userEmail={session.user.email || undefined}
+                userRole={session.user.role}
               />
             ) : (
               <Link
