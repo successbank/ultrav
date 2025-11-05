@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma'
 import { formatPrice, calculateDiscountedPrice } from '@/lib/utils'
 import AddToCartButton from '@/components/AddToCartButton'
 import AddToWishlistButton from '@/components/AddToWishlistButton'
+import ShareButton from '@/components/ShareButton'
 import { ChevronDown, Package, Truck, RefreshCw } from 'lucide-react'
 
 interface PageProps {
@@ -163,14 +164,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <AddToCartButton product={product} />
               </div>
-              <AddToWishlistButton
-                productId={product.id}
-                productName={product.name}
-              />
+              <div className="flex gap-4">
+                <AddToWishlistButton
+                  productId={product.id}
+                  productName={product.name}
+                />
+                <ShareButton
+                  url={`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5635'}/products/${product.id}`}
+                  title={product.name}
+                  text={`${product.name} - ${product.brand}`}
+                />
+              </div>
             </div>
 
             {/* Product Info */}
