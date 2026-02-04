@@ -57,3 +57,83 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Quill 에디터 정렬 스타일 - 고객 페이지에서도 작동하도록 */
+@layer utilities {
+  /* 텍스트 정렬 */
+  .ql-align-center {
+    text-align: center;
+  }
+
+  .ql-align-right {
+    text-align: right;
+  }
+
+  .ql-align-justify {
+    text-align: justify;
+  }
+
+  /* 이미지 정렬 - 이미지는 블록 레벨로 변환하여 margin으로 정렬 */
+  img.ql-align-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  img.ql-align-right {
+    display: block;
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  /* 이미지 기본 스타일 - 반응형 대응 */
+  .ql-align-center img,
+  .ql-align-right img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .ql-align-right img {
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  /* prose 클래스 내에서도 작동하도록 specificity 확보 */
+  .prose .ql-align-center {
+    text-align: center;
+  }
+
+  .prose .ql-align-right {
+    text-align: right;
+  }
+
+  .prose .ql-align-justify {
+    text-align: justify;
+  }
+
+  /* prose 내 이미지 정렬 */
+  .prose img.ql-align-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .prose img.ql-align-right {
+    display: block;
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  .prose .ql-align-center img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .prose .ql-align-right img {
+    display: block;
+    margin-left: auto;
+    margin-right: 0;
+  }
+}

@@ -3,12 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, Trash2 } from 'lucide-react'
+import ImageUploader from './ImageUploader'
+import RichTextEditor from './RichTextEditor'
 
 interface Product {
   id: string
   name: string
   brand: string
   description: string | null
+  detailContent?: string | null
   price: number
   discount: number
   categoryId: string
@@ -36,15 +39,23 @@ export default function ProductEditForm({
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // 초기 이미지 배열 (기존 imageUrl + images 배열 합치기)
+  const initialImages = [
+    product.imageUrl || '',
+    ...product.images,
+  ].filter(Boolean)
+
   const [formData, setFormData] = useState({
     name: product.name,
     brand: product.brand,
     description: product.description || '',
+    detailContent: product.detailContent || '',
     price: product.price,
     discount: product.discount,
     categoryId: product.categoryId,
     stock: product.stock,
     isActive: product.isActive,
+    images: initialImages,
   })
 
   const handleChange = (
@@ -72,6 +83,20 @@ export default function ProductEditForm({
     }
   }
 
+  const handleImagesChange = (images: string[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      images,
+    }))
+  }
+
+  const handleDetailContentChange = (content: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      detailContent: content,
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSaving(true)
@@ -82,7 +107,11 @@ export default function ProductEditForm({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          imageUrl: formData.images[0] || null,
+          images: formData.images.slice(1), // 첫 번째 제외 나머지
+        }),
       })
 
       if (response.ok) {
@@ -135,89 +164,120 @@ export default function ProductEditForm({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 상품명 */}
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* 상품 이미지 */}
         <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            상품명 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            상품 이미지 (최대 5장)
           </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          <ImageUploader
+            images={formData.images}
+            onChange={handleImagesChange}
+            maxImages={5}
           />
+          <p className="mt-2 text-sm text-gray-500">
+            첫 번째 이미지가 메인 이미지로 사용됩니다
+          </p>
         </div>
 
-        {/* 브랜드 */}
-        <div>
-          <label
-            htmlFor="brand"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            브랜드 <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="brand"
-            name="brand"
-            value={formData.brand}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+        {/* 기본 정보 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 상품명 */}
+          <div className="md:col-span-2">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              상품명 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* 브랜드 */}
+          <div>
+            <label
+              htmlFor="brand"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              브랜드 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="brand"
+              name="brand"
+              value={formData.brand}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* 카테고리 */}
+          <div>
+            <label
+              htmlFor="categoryId"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              카테고리 <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="categoryId"
+              name="categoryId"
+              value={formData.categoryId}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* 설명 */}
+        {/* 간단한 설명 */}
         <div>
           <label
             htmlFor="description"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            상품 설명
+            간단한 설명
           </label>
           <textarea
             id="description"
             name="description"
             value={formData.description}
             onChange={handleChange}
-            rows={4}
+            rows={3}
+            placeholder="상품 목록에 표시될 간단한 설명을 입력하세요"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
-        {/* 카테고리 */}
+        {/* 상세 내용 (리치 텍스트 에디터) */}
         <div>
-          <label
-            htmlFor="categoryId"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            카테고리 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            상세 내용
           </label>
-          <select
-            id="categoryId"
-            name="categoryId"
-            value={formData.categoryId}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <RichTextEditor
+            value={formData.detailContent}
+            onChange={handleDetailContentChange}
+            placeholder="상품의 상세 설명, 사용 방법, 특징 등을 입력하세요"
+          />
         </div>
 
         {/* 가격 및 할인 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label
               htmlFor="price"
@@ -256,26 +316,25 @@ export default function ProductEditForm({
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-        </div>
 
-        {/* 재고 */}
-        <div>
-          <label
-            htmlFor="stock"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            재고 수량 <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            id="stock"
-            name="stock"
-            value={formData.stock}
-            onChange={handleChange}
-            required
-            min="0"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <div>
+            <label
+              htmlFor="stock"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              재고 수량 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              id="stock"
+              name="stock"
+              value={formData.stock}
+              onChange={handleChange}
+              required
+              min="0"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
         </div>
 
         {/* 판매 상태 */}

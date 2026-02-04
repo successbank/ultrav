@@ -12,10 +12,43 @@ import {
   User as UserIcon,
   ShoppingBag,
   Star,
-  Clock
+  Clock,
+  Building2,
+  Briefcase
 } from "lucide-react"
 import Link from "next/link"
 import { formatPrice } from "@/lib/utils"
+import { UserRole } from "@prisma/client"
+
+// 사용자 역할별 표시 정보
+const getRoleInfo = (role: UserRole) => {
+  switch (role) {
+    case 'ADMIN':
+      return {
+        label: '최고관리자',
+        color: 'bg-purple-100 text-purple-800',
+        icon: Shield
+      }
+    case 'HOSPITAL':
+      return {
+        label: '병원',
+        color: 'bg-blue-100 text-blue-800',
+        icon: Building2
+      }
+    case 'SALES_MANAGER':
+      return {
+        label: '영업매니저',
+        color: 'bg-green-100 text-green-800',
+        icon: Briefcase
+      }
+    default: // USER
+      return {
+        label: '일반회원',
+        color: 'bg-gray-100 text-gray-800',
+        icon: UserIcon
+      }
+  }
+}
 
 interface PageProps {
   params: Promise<{
@@ -102,14 +135,16 @@ export default async function UserDetailPage({ params }: PageProps) {
               <p className="text-gray-500 mt-1">{user.email}</p>
 
               <div className="mt-4">
-                <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${
-                  user.role === 'ADMIN'
-                    ? 'bg-purple-100 text-purple-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {user.role === 'ADMIN' && <Shield className="w-4 h-4" />}
-                  {user.role === 'ADMIN' ? '관리자' : '일반 사용자'}
-                </span>
+                {(() => {
+                  const roleInfo = getRoleInfo(user.role)
+                  const RoleIcon = roleInfo.icon
+                  return (
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full ${roleInfo.color}`}>
+                      <RoleIcon className="w-4 h-4" />
+                      {roleInfo.label}
+                    </span>
+                  )
+                })()}
               </div>
             </div>
           </Card>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { formatPrice, calculateDiscountedPrice } from '@/lib/utils'
+import HeroCarousel from '@/components/home/HeroCarousel'
 
 export default async function Home() {
   // 상품 목록 가져오기
@@ -14,23 +15,8 @@ export default async function Home() {
   return (
     <div className="min-h-screen">
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-4">
-            Ultra 쇼핑몰에 오신 것을 환영합니다
-          </h1>
-          <p className="text-xl mb-8">
-            최고 품질의 패션 아이템을 합리적인 가격에 만나보세요
-          </p>
-          <Link
-            href="/products"
-            className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-          >
-            쇼핑 시작하기
-          </Link>
-        </div>
-      </section>
+      {/* Hero Carousel */}
+      <HeroCarousel />
 
       {/* Products Grid */}
       <section className="container mx-auto px-4 py-16">

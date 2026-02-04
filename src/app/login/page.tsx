@@ -1,16 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signIn, useSession } from 'next-auth/react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [isLogin, setIsLogin] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // 이미 로그인된 사용자는 메인페이지로 리다이렉트
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/')
+    }
+  }, [status, router])
 
   // 로그인 폼 상태
   const [loginForm, setLoginForm] = useState({
@@ -34,22 +43,17 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // TODO: NextAuth 로그인 API 호출
-      // 현재는 임시로 localStorage 사용
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: loginForm.email,
+        password: loginForm.password,
+      })
 
-      if (loginForm.email && loginForm.password) {
-        localStorage.setItem(
-          'user',
-          JSON.stringify({
-            email: loginForm.email,
-            name: '사용자',
-          })
-        )
-        alert('로그인 성공!')
-        router.push('/')
+      if (result?.error) {
+        setError('이메일 또는 비밀번호가 올바르지 않습니다.')
       } else {
-        setError('이메일과 비밀번호를 입력해주세요.')
+        router.push('/')
+        router.refresh()
       }
     } catch (err) {
       setError('로그인에 실패했습니다.')
@@ -63,7 +67,6 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    // 유효성 검사
     if (registerForm.password !== registerForm.confirmPassword) {
       setError('비밀번호가 일치하지 않습니다.')
       return
@@ -77,8 +80,23 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // TODO: 회원가입 API 호출
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: registerForm.email,
+          password: registerForm.password,
+          name: registerForm.name,
+          phone: registerForm.phone,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || '회원가입에 실패했습니다.')
+        return
+      }
 
       alert('회원가입이 완료되었습니다! 로그인해주세요.')
       setIsLogin(true)
@@ -96,14 +114,19 @@ export default function LoginPage() {
     }
   }
 
+  // 세션 로딩 중이면 빈 화면
+  if (status === 'loading') {
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold text-blue-600">
+          <h1 className="text-3xl font-bold text-blue-600">
             Ultra 쇼핑몰
-          </Link>
+          </h1>
           <p className="mt-2 text-gray-600">
             {isLogin ? '로그인하여 쇼핑을 시작하세요' : '회원가입하고 쇼핑을 시작하세요'}
           </p>
@@ -252,39 +275,6 @@ export default function LoginPage() {
               </Button>
             </form>
           )}
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">또는</span>
-            </div>
-          </div>
-
-          {/* Social Login */}
-          <div className="space-y-3">
-            <button
-              type="button"
-              className="w-full py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-            >
-              Google로 계속하기
-            </button>
-            <button
-              type="button"
-              className="w-full py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-            >
-              Kakao로 계속하기
-            </button>
-          </div>
-        </div>
-
-        {/* Back to Home */}
-        <div className="text-center mt-6">
-          <Link href="/" className="text-gray-600 hover:text-blue-600 transition-colors">
-            홈으로 돌아가기
-          </Link>
         </div>
       </div>
     </div>

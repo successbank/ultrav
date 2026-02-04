@@ -42,6 +42,42 @@ async function main() {
 
   console.log('✅ 테스트 사용자 생성:', testUser.email)
 
+  // 2-1. 병원 계정 생성
+  const hospitalPassword = await bcrypt.hash('hospital123!@#', 10)
+
+  const hospital = await prisma.user.upsert({
+    where: { email: 'hospital@ultra.com' },
+    update: {},
+    create: {
+      email: 'hospital@ultra.com',
+      name: '서울대병원',
+      password: hospitalPassword,
+      role: 'HOSPITAL',
+      phone: '02-1234-5678',
+      address: '서울특별시 종로구 대학로 101',
+    },
+  })
+
+  console.log('✅ 병원 계정 생성:', hospital.email)
+
+  // 2-2. 영업매니저 계정 생성
+  const salesManagerPassword = await bcrypt.hash('sales123!@#', 10)
+
+  const salesManager = await prisma.user.upsert({
+    where: { email: 'sales@ultra.com' },
+    update: {},
+    create: {
+      email: 'sales@ultra.com',
+      name: '김영업',
+      password: salesManagerPassword,
+      role: 'SALES_MANAGER',
+      phone: '010-5555-6666',
+      address: '서울특별시 강남구 테헤란로 789',
+    },
+  })
+
+  console.log('✅ 영업매니저 계정 생성:', salesManager.email)
+
   // 3. 카테고리 생성 (화장품 쇼핑몰)
   // 대분류 (Level 1) - 8개
   const topLevelCategories = [

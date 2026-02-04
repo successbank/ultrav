@@ -11,7 +11,8 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
-  LogOut
+  LogOut,
+  FileText
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/Button"
@@ -20,6 +21,7 @@ const navigation = [
   { name: "대시보드", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "상품 관리", href: "/admin/products", icon: Package },
   { name: "주문 관리", href: "/admin/orders", icon: ShoppingCart },
+  { name: "견적서 관리", href: "/admin/quotes", icon: FileText },
   { name: "카테고리", href: "/admin/categories", icon: FolderTree },
   { name: "사용자 관리", href: "/admin/users", icon: Users },
   { name: "리뷰 관리", href: "/admin/reviews", icon: MessageSquare },

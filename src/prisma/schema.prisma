@@ -24,12 +24,15 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  accounts      Account[]
-  sessions      Session[]
-  orders        Order[]
-  cart          Cart?
-  reviews       Review[]
-  wishlist      Wishlist[]
+  accounts             Account[]
+  sessions             Session[]
+  orders               Order[]
+  cart                 Cart?
+  reviews              Review[]
+  wishlist             Wishlist[]
+  loginHistory         LoginHistory[]
+  quotesAsCustomer     Quote[]       @relation("CustomerQuotes")
+  quotesAsSalesManager Quote[]       @relation("SalesManagerQuotes")
 
   @@index([email])
   @@map("users")
@@ -38,6 +41,8 @@ model User {
 enum UserRole {
   USER
   ADMIN
+  HOSPITAL
+  SALES_MANAGER
 }
 
 // NextAuth Models
@@ -102,26 +107,28 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  brand       String
-  description String?  @db.Text
-  price       Int      // 원화 단위 (원)
-  discount    Int      @default(0) // 할인율 (%)
-  category    Category @relation(fields: [categoryId], references: [id])
-  categoryId  String
-  imageUrl    String
-  images      String[] // 추가 이미지 URLs
-  stock       Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  brand         String
+  description   String?  @db.Text // 간단한 설명
+  detailContent String?  @db.Text // 상세 내용 (HTML)
+  price         Int      // 원화 단위 (원)
+  discount      Int      @default(0) // 할인율 (%)
+  category      Category @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  imageUrl      String?  // 메인 이미지 (nullable로 변경)
+  images        String[] // 추가 이미지 URLs (최대 5장)
+  stock         Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
   cartItems  CartItem[]
   orderItems OrderItem[]
   reviews    Review[]
   wishlist   Wishlist[]
+  quoteItems QuoteItem[]
 
   @@index([categoryId])
   @@index([brand])
@@ -205,21 +212,29 @@ model OrderItem {
 
 // Review Model
 model Review {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  rating    Int      // 1-5
-  comment   String?  @db.Text
-  images    String[] // 리뷰 이미지 URLs
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating    Int          // 1-5
+  comment   String?      @db.Text
+  images    String[]     // 리뷰 이미지 URLs
+  status    ReviewStatus @default(PENDING) // 승인 상태
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   @@index([userId])
   @@index([productId])
   @@index([rating])
+  @@index([status])
   @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING  // 승인 대기
+  APPROVED // 승인됨 (노출)
+  REJECTED // 거부됨 (숨김)
 }
 
 // Contact Model
@@ -266,4 +281,96 @@ model Wishlist {
   @@index([userId])
   @@index([productId])
   @@map("wishlists")
+}
+
+// Login History Model
+model LoginHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress   String
+  userAgent   String   @db.Text
+  device      String?  // 디바이스 종류 (Mobile, Desktop, Tablet)
+  browser     String?  // 브라우저 정보
+  os          String?  // 운영체제 정보
+  country     String?  // 국가
+  city        String?  // 도시
+  success     Boolean  @default(true) // 로그인 성공 여부
+  failReason  String?  // 실패 이유 (있는 경우)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@map("login_histories")
+}
+
+// Quote (견적서) Models
+model Quote {
+  id              String      @id @default(cuid())
+  quoteNumber     String      @unique // QT-20250108-0001
+  customerId      String      // 고객 (병원/일반회원)
+  customer        User        @relation("CustomerQuotes", fields: [customerId], references: [id], onDelete: Cascade)
+  salesManagerId  String      // 영업매니저
+  salesManager    User        @relation("SalesManagerQuotes", fields: [salesManagerId], references: [id], onDelete: Cascade)
+  status          QuoteStatus @default(PENDING)
+  totalAmount     Int         // 견적 총액 (조정된 가격)
+  originalAmount  Int         // 원래 총액
+  discountAmount  Int         @default(0) // 할인액
+  items           QuoteItem[]
+  validUntil      DateTime    // 견적 유효기간
+  notes           String?     @db.Text // 영업매니저 메모
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([customerId])
+  @@index([salesManagerId])
+  @@index([status])
+  @@index([quoteNumber])
+  @@map("quotes")
+}
+
+enum QuoteStatus {
+  PENDING  // 견적 작성 대기
+  SENT     // 고객에게 전송됨
+  APPROVED // 고객 승인 (결제 가능)
+  REJECTED // 고객 거부
+  EXPIRED  // 기간 만료
+  ORDERED  // 주문 완료
+}
+
+// 견적서 항목
+model QuoteItem {
+  id            String   @id @default(cuid())
+  quoteId       String
+  quote         Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  quantity      Int      // 수량
+  originalPrice Int      // 원래 단가 (할인 적용 전)
+  quotedPrice   Int      // 견적 단가 (영업매니저가 조정)
+  createdAt     DateTime @default(now())
+
+  @@index([quoteId])
+  @@index([productId])
+  @@map("quote_items")
+}
+
+// Carousel (메인페이지 캐러셀) Model
+model Carousel {
+  id          String   @id @default(cuid())
+  title       String   // 캐러셀 제목
+  subtitle    String?  // 부제목
+  description String?  @db.Text // 설명
+  imageUrl    String   // 이미지 URL
+  linkUrl     String?  // 클릭시 이동할 URL
+  linkText    String?  // 링크 버튼 텍스트 (예: "자세히 보기")
+  order       Int      @default(0) // 순서 (낮을수록 먼저 표시)
+  isActive    Boolean  @default(true) // 활성화 여부
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([order])
+  @@index([isActive])
+  @@map("carousels")
 }

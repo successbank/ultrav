@@ -1,75 +1,96 @@
-import prisma from "@/lib/prisma"
-import { Card } from "@/components/ui/Card"
-import { Button } from "@/components/ui/Button"
-import { Star, Trash2 } from "lucide-react"
-import Link from "next/link"
+/**
+ * 관리자 리뷰 관리 페이지
+ * 경로: /admin/reviews
+ */
+
+import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
+import { auth } from '@/lib/auth'
+import prisma from '@/lib/prisma'
+import ReviewManagementClient from '@/components/admin/ReviewManagementClient'
+
+export const metadata = {
+  title: '리뷰 관리 - Ultra Admin',
+  description: '고객 리뷰 승인/거부 관리',
+}
 
 export default async function AdminReviewsPage() {
-  const reviews = await prisma.review.findMany({
-    include: {
-      user: true,
-      product: true
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
-  })
+  // 관리자 권한 확인
+  const session = await auth()
+  if (!session?.user || session.user.role !== 'ADMIN') {
+    redirect('/admin/login')
+  }
+
+  // 초기 데이터 로드
+  const [initialReviews, stats] = await Promise.all([
+    prisma.review.findMany({
+      where: {},
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        },
+        product: {
+          select: {
+            id: true,
+            name: true,
+            brand: true,
+            imageUrl: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    }),
+    getReviewStats()
+  ])
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">리뷰 관리</h1>
-        <p className="text-gray-600 mt-2">총 {reviews.length}개의 리뷰</p>
+        <p className="text-gray-600 mt-2">고객 리뷰를 검토하고 승인/거부 처리할 수 있습니다</p>
       </div>
 
-      <Card>
-        <div className="divide-y divide-gray-200">
-          {reviews.map((review) => (
-            <div key={review.id} className="p-6 hover:bg-gray-50">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Link
-                      href={`/products/${review.product.id}`}
-                      className="font-medium text-gray-900 hover:text-blue-600"
-                    >
-                      {review.product.name}
-                    </Link>
-                    <span className="text-sm text-gray-500">·</span>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-4 h-4 ${
-                            i < review.rating
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-2">{review.comment}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span>{review.user.name}</span>
-                    <span>·</span>
-                    <span>{new Date(review.createdAt).toLocaleDateString('ko-KR')}</span>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+      <Suspense fallback={<LoadingReviews />}>
+        <ReviewManagementClient
+          initialReviews={initialReviews}
+          initialStats={stats}
+        />
+      </Suspense>
+    </div>
+  )
+}
 
-          {reviews.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">등록된 리뷰가 없습니다.</p>
-            </div>
-          )}
-        </div>
-      </Card>
+async function getReviewStats() {
+  const statusCounts = await prisma.review.groupBy({
+    by: ['status'],
+    _count: { status: true }
+  })
+
+  return {
+    total: await prisma.review.count(),
+    pending: statusCounts.find(s => s.status === 'PENDING')?._count.status || 0,
+    approved: statusCounts.find(s => s.status === 'APPROVED')?._count.status || 0,
+    rejected: statusCounts.find(s => s.status === 'REJECTED')?._count.status || 0,
+  }
+}
+
+function LoadingReviews() {
+  return (
+    <div className="bg-white rounded-lg shadow p-8">
+      <div className="animate-pulse space-y-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="border-b pb-4">
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

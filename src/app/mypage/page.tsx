@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Card } from "@/components/ui/Card"
 import Link from "next/link"
-import { Mail, ShoppingBag, Heart, Settings, Package } from "lucide-react"
+import { Mail, ShoppingBag, Heart, Settings, Package, Shield, FileText } from "lucide-react"
 import prisma from "@/lib/prisma"
 
 export default async function MyPage() {
@@ -15,12 +15,15 @@ export default async function MyPage() {
   const user = session.user
 
   // 통계 데이터 가져오기
-  const [orderCount, wishlistCount] = await Promise.all([
+  const [orderCount, wishlistCount, quoteCount] = await Promise.all([
     prisma.order.count({
       where: { userId: user.id },
     }),
     prisma.wishlist.count({
       where: { userId: user.id },
+    }),
+    prisma.quote.count({
+      where: { customerId: user.id },
     }),
   ])
 
@@ -53,7 +56,7 @@ export default async function MyPage() {
       </Card>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -77,10 +80,22 @@ export default async function MyPage() {
             </div>
           </div>
         </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">받은 견적서</p>
+              <p className="text-3xl font-bold text-gray-900">{quoteCount}</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+              <FileText size={24} className="text-green-600" />
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* 빠른 링크 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Link href="/mypage/orders">
           <Card className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
             <div className="flex flex-col items-center">
@@ -101,6 +116,30 @@ export default async function MyPage() {
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">찜 목록</h3>
               <p className="text-sm text-gray-600">관심 상품을 모아보세요</p>
+            </div>
+          </Card>
+        </Link>
+
+        <Link href="/mypage/quotes">
+          <Card className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+                <FileText size={24} className="text-green-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">견적서</h3>
+              <p className="text-sm text-gray-600">받은 견적서를 확인하세요</p>
+            </div>
+          </Card>
+        </Link>
+
+        <Link href="/mypage/login-history">
+          <Card className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-3">
+                <Shield size={24} className="text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">로그인 기록</h3>
+              <p className="text-sm text-gray-600">계정 보안을 확인하세요</p>
             </div>
           </Card>
         </Link>

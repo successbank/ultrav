@@ -1,7 +1,8 @@
+import Link from "next/link"
 import { Card } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
-import { Settings as SettingsIcon, Save } from "lucide-react"
+import { Settings as SettingsIcon, Save, Image, ChevronRight } from "lucide-react"
 
 export default function AdminSettingsPage() {
   return (
@@ -51,6 +52,23 @@ export default function AdminSettingsPage() {
             저장
           </Button>
         </div>
+      </Card>
+
+      {/* 메인페이지 캐러셀 관리 */}
+      <Card className="p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Image className="w-5 h-5" />
+          메인페이지 캐러셀 관리
+        </h2>
+        <p className="text-gray-600 mb-4">
+          홈페이지 메인 슬라이드 배너를 관리합니다. 이미지, 제목, 링크를 설정할 수 있습니다.
+        </p>
+        <Link href="/admin/settings/carousels">
+          <Button variant="outline" className="w-full justify-between">
+            캐러셀 관리하기
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </Link>
       </Card>
 
       {/* 배송 설정 */}

@@ -5,6 +5,10 @@ import { formatPrice, calculateDiscountedPrice } from '@/lib/utils'
 import AddToCartButton from '@/components/AddToCartButton'
 import AddToWishlistButton from '@/components/AddToWishlistButton'
 import ShareButton from '@/components/ShareButton'
+import ProductImageGallery from '@/components/ProductImageGallery'
+import ReviewForm from '@/components/reviews/ReviewForm'
+import ReviewList from '@/components/reviews/ReviewList'
+import StarRating from '@/components/reviews/StarRating'
 import { ChevronDown, Package, Truck, RefreshCw } from 'lucide-react'
 
 interface PageProps {
@@ -16,16 +20,22 @@ interface PageProps {
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params
 
-  const product = await prisma.product.findUnique({
-    where: { id },
-    include: {
-      category: true,
-      reviews: {
-        include: { user: true },
-        orderBy: { createdAt: 'desc' },
+  const [product, categories] = await Promise.all([
+    prisma.product.findUnique({
+      where: { id },
+      include: {
+        category: true,
+        reviews: {
+          where: { status: 'APPROVED' }, // 승인된 리뷰만 표시
+          include: { user: true },
+          orderBy: { createdAt: 'desc' },
+        },
       },
-    },
-  })
+    }),
+    prisma.category.findMany({
+      orderBy: { name: 'asc' },
+    }),
+  ])
 
   if (!product) {
     notFound()
@@ -68,36 +78,49 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </ol>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white rounded-lg shadow-sm p-8">
-          {/* Product Images */}
-          <div>
-            <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden relative mb-4">
-              <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-lg">
-                이미지 준비중
-              </div>
-              {product.discount > 0 && (
-                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-lg z-10">
-                  {product.discount}% OFF
-                </div>
-              )}
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar Filters */}
+          <aside className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+              <h2 className="text-xl font-bold mb-4">카테고리</h2>
 
-            {/* Additional Images */}
-            {product.images.length > 0 && (
-              <div className="grid grid-cols-4 gap-2">
-                {product.images.map((image, index) => (
-                  <div
-                    key={index}
-                    className="aspect-square bg-gray-200 rounded-lg overflow-hidden"
+              {/* Category Filter */}
+              <div className="mb-6">
+                <div className="space-y-2">
+                  <Link
+                    href="/products"
+                    className="block text-sm hover:text-blue-600 transition-colors text-gray-700"
                   >
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                      이미지 {index + 1}
-                    </div>
-                  </div>
-                ))}
+                    전체
+                  </Link>
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/products?category=${category.id}`}
+                      className={`block text-sm hover:text-blue-600 transition-colors ${
+                        product.categoryId === category.id
+                          ? 'text-blue-600 font-semibold'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white rounded-lg shadow-sm p-8">
+          {/* Product Images with Lightbox */}
+          <ProductImageGallery
+            productName={product.name}
+            mainImage={product.imageUrl}
+            additionalImages={product.images}
+            discount={product.discount}
+          />
 
           {/* Product Info */}
           <div>
@@ -200,10 +223,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </dl>
             </div>
           </div>
-        </div>
+            </div>
 
-        {/* Product Details Accordion Section */}
-        <div className="mt-12 bg-white rounded-lg shadow-sm overflow-hidden">
+            {/* Product Details Accordion Section */}
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           {/* 상세 설명 */}
           <details className="group border-b" open>
             <summary className="flex items-center justify-between cursor-pointer list-none px-8 py-6 hover:bg-gray-50 transition-colors">
@@ -211,11 +234,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <ChevronDown className="w-6 h-6 text-gray-400 transition-transform group-open:rotate-180" />
             </summary>
             <div className="px-8 pb-8">
-              <div className="prose prose-sm max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap mb-6">
-                  {product.description}
-                </p>
-              </div>
+              {/* 상세 내용 (HTML) */}
+              {product.detailContent ? (
+                <div
+                  className="prose prose-sm max-w-none mb-8"
+                  dangerouslySetInnerHTML={{ __html: product.detailContent }}
+                />
+              ) : (
+                <div className="prose prose-sm max-w-none mb-6">
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {product.description}
+                  </p>
+                </div>
+              )}
 
               {/* 주요 특징 */}
               <div className="bg-blue-50 rounded-lg p-6 mb-6">
@@ -402,49 +433,37 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </details>
 
           {/* 고객 리뷰 */}
-          <details className="group">
+          <details className="group" open>
             <summary className="flex items-center justify-between cursor-pointer list-none px-8 py-6 hover:bg-gray-50 transition-colors">
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
                 고객 리뷰 ({product.reviews.length})
+                {averageRating > 0 && (
+                  <div className="flex items-center gap-2 text-base font-normal">
+                    <StarRating rating={averageRating} readonly size="sm" showValue />
+                  </div>
+                )}
               </h2>
               <ChevronDown className="w-6 h-6 text-gray-400 transition-transform group-open:rotate-180" />
             </summary>
-            <div className="px-8 pb-8">
-              {product.reviews.length === 0 ? (
-                <p className="text-gray-500 text-center py-12">
-                  아직 리뷰가 없습니다. 첫 번째 리뷰를 작성해보세요!
-                </p>
-              ) : (
-                <div className="space-y-6">
-                  {product.reviews.map((review) => (
-                    <div key={review.id} className="border-b pb-6 last:border-b-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <span
-                              key={star}
-                              className={`text-lg ${
-                                star <= review.rating ? 'text-yellow-400' : 'text-gray-300'
-                              }`}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                        <span className="font-semibold">{review.user.name || '익명'}</span>
-                        <span className="text-sm text-gray-500">
-                          {new Date(review.createdAt).toLocaleDateString('ko-KR')}
-                        </span>
-                      </div>
-                      {review.comment && (
-                        <p className="text-gray-700 leading-relaxed">{review.comment}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="px-8 pb-8 space-y-8">
+              {/* 리뷰 작성 폼 */}
+              <div>
+                <ReviewForm productId={product.id} />
+              </div>
+
+              {/* 리뷰 목록 */}
+              <div>
+                <ReviewList
+                  productId={product.id}
+                  initialReviews={product.reviews.slice(0, 5)}
+                  initialTotal={product.reviews.length}
+                  initialHasMore={product.reviews.length > 5}
+                />
+              </div>
             </div>
           </details>
+            </div>
+          </div>
         </div>
       </div>
     </div>
