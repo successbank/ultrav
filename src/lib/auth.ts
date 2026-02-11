@@ -1,39 +1,14 @@
-import NextAuth, { type DefaultSession } from "next-auth"
+import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
-import type { UserRole } from "@prisma/client"
 import { headers } from "next/headers"
-
-declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: {
-      id: string
-      role: UserRole
-    } & DefaultSession["user"]
-  }
-
-  interface User {
-    role: UserRole
-  }
-}
-
-declare module "@auth/core/jwt" {
-  interface JWT {
-    role: UserRole
-  }
-}
+import { authConfig } from "./auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  basePath: "/api/auth",
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
-  },
   events: {
     async signIn({ user, account, profile, isNewUser }) {
       // 로그인 성공 시 기록 저장
@@ -54,33 +29,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       } catch (error) {
         console.error("Failed to record login history:", error)
       }
-    },
-  },
-  callbacks: {
-    authorized: async ({ auth, request }) => {
-      const { pathname } = request.nextUrl
-
-      // 로그인 페이지는 항상 접근 허용
-      if (pathname === "/login" || pathname === "/admin/login") {
-        return true
-      }
-
-      // 다른 페이지는 미들웨어에서 처리
-      return undefined
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role
-        token.id = user.id
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role
-      }
-      return session
     },
   },
   providers: [
