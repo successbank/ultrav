@@ -1,298 +1,119 @@
 # CLAUDE.md
 
-이 파일은 Claude Code (claude.ai/code)가 이 저장소의 코드를 작업할 때 참고할 가이드를 제공합니다.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+# 개발팀 페르소나
+- /home/successbank/projects/ultra/.claude/CLAUDE.md
+
+## 소통 언어
+- 한국어
 
 ## 프로젝트 개요
 
-**Ultra**는 Docker 기반 개발 아키텍처로 구축된 Next.js 14 웹 애플리케이션입니다. SuccessBank 모노레포 전반에서 사용되는 표준화된 패턴을 따르는 최소한의 템플릿 기반 프로젝트로, 빠른 개발과 배포를 위해 설계되었습니다.
+**Ultra**는 B2B/B2C 하이브리드 온라인 쇼핑몰(의료기기/용품)로, Docker 기반 개발 환경에서 구동됩니다. 일반 사용자 쇼핑, 병원 고객 견적 시스템, 영업매니저 대시보드, 관리자 패널을 포함합니다.
 
-## claude code 소통언어
-- 한국어
+- **프레임워크**: Next.js 14.2.5 (App Router, TypeScript)
+- **ORM**: Prisma 5 + PostgreSQL 15
+- **인증**: NextAuth v5 (beta.25) with JWT strategy, Credentials provider
+- **상태관리**: Zustand (클라이언트), Redis 7 (서버 캐시/세션)
+- **스타일링**: Tailwind CSS 3 + Radix UI + shadcn/ui 패턴 (CVA + clsx + tailwind-merge)
+- **아이콘**: Lucide React
+- **이미지**: sharp (서버), Swiper (캐러셀), yet-another-react-lightbox (갤러리)
+- **PDF**: jspdf + jspdf-autotable (견적서 PDF 생성, 한글 폰트 내장)
 
-### 기술 스택
-
-- **프레임워크**: Next.js 14.2.5 (App Router)
-- **UI 라이브러리**: React 18.3.1
-- **JavaScript**: Node.js 18 (Alpine)
-- **런타임 환경**: Docker (Node.js 18-Alpine)
-- **데이터베이스**: PostgreSQL 15 (Alpine)
-- **캐싱/세션**: Redis 7 (Alpine)
-- **데이터베이스 관리 UI**: Adminer
-- **패키지 매니저**: npm
-
-## 프로젝트 구조
-
-```
-/data/successbank/projects/ultra/
-├── src/                        # Next.js 애플리케이션 소스 코드
-│   ├── app/                    # Next.js App Router 페이지 및 레이아웃
-│   │   └── page.js            # 홈 페이지 컴포넌트
-│   ├── package.json           # Node.js 의존성 및 스크립트
-│   ├── node_modules/          # 설치된 의존성 (docker 볼륨)
-│   └── .next/                 # Next.js 빌드 출력 (docker 볼륨)
-├── docker/                     # Docker 구성
-│   └── Dockerfile             # 개발/프로덕션용 멀티스테이지 빌드
-├── docker-compose.yml         # 서비스 오케스트레이션 (4-컨테이너 설정)
-├── .env                        # 환경 변수 설정
-├── logs/                       # 애플리케이션 로그 디렉토리
-├── backups/                    # 데이터베이스 백업 디렉토리
-├── .claude/                    # Claude Code 설정
-│   └── settings.local.json    # 로컬 권한 및 설정
-└── CLAUDE.md                  # 이 파일
-```
-
-## 환경 설정
-
-프로젝트는 `.env` 파일에 정의된 환경 변수를 사용합니다:
-
-```
-# 프로젝트 식별
-PROJECT_NAME=ultra
-COMPOSE_PROJECT_NAME=ultra
-
-# 서비스 포트
-WEB_PORT=5635           # Next.js 애플리케이션
-DB_PORT=5636            # PostgreSQL
-REDIS_PORT=5637         # Redis 캐시
-ADMINER_PORT=5638       # 데이터베이스 UI
-
-# 데이터베이스 설정
-DB_TYPE=postgres
-DB_HOST=database        # 컨테이너 네트워크 호스트명
-DB_NAME=ultra_db
-DB_USER=ultra_user
-DB_PASSWORD=lLi9CeCEgryaV3M06t9Oh3sKh
-DB_ROOT_PASSWORD=ZRPZgAzFmiazqqcFwwxTnff2q
-
-# 캐시 설정
-REDIS_PASSWORD=zWh4S1PkIo3WQlkV
-
-# 애플리케이션 설정
-NODE_ENV=development
-APP_ENV=development
-UID=1000
-GID=1000
-```
-
-## Docker 아키텍처
-
-프로젝트는 4개 컨테이너로 구성된 Docker Compose 설정을 사용합니다:
-
-### 서비스
-
-1. **app**: Next.js 개발 서버
-   - 이미지: `node:18-alpine`
-   - 노출 포트: `5635` (WEB_PORT)
-   - 볼륨 마운트:
-     - `./src:/app:cached` - 소스 코드 (핫 리로드)
-     - `/app/node_modules` - 익명 볼륨
-     - `/app/.next` - 익명 볼륨
-   - 시작 명령: `npm install && npm run dev`
-
-2. **database**: PostgreSQL 15
-   - 이미지: `postgres:15-alpine`
-   - 노출 포트: `5636` (DB_PORT)
-   - 볼륨: `postgres_data` - 영구 데이터 저장소
-   - 헬스 체크: 활성화 (10초 간격, 5초 타임아웃, 5회 재시도)
-
-3. **redis**: Redis 7 캐시
-   - 이미지: `redis:7-alpine`
-   - 노출 포트: `5637` (REDIS_PORT)
-   - 볼륨: `redis_data` - 영구 데이터 저장소
-   - 인증: 비밀번호 필수
-
-4. **adminer**: 데이터베이스 관리 UI
-   - 이미지: `adminer`
-   - 노출 포트: `5638` (ADMINER_PORT)
-   - 용도: 웹 기반 PostgreSQL 관리
-
-### 네트워크
-
-모든 컨테이너는 프로젝트 전용 브리지 네트워크를 통해 통신합니다: `app-network`
-
-### 로깅
-
-모든 서비스는 순환 방식의 JSON 파일 로깅을 사용합니다:
-- 최대 파일 크기: 10MB
-- 최대 파일 수: 3개 (최근 30MB의 로그 유지)
-
-## Package.json 및 스크립트
-
-위치: `/data/successbank/projects/ultra/src/package.json`
-
-### 사용 가능한 NPM 스크립트
+## 개발 명령어
 
 ```bash
-npm run dev       # Next.js 개발 서버 시작 (컨테이너 내부에서 실행)
-npm run build     # 최적화된 프로덕션 빌드 생성
-npm start         # 프로덕션 서버 시작
-npm install       # 의존성 설치 (컨테이너 시작 시 자동 실행)
-```
-
-### 의존성
-
-- `next`: 14.2.5
-- `react`: 18.3.1
-- `react-dom`: 18.3.1
-
-## Dockerfile 구성
-
-위치: `/data/successbank/projects/ultra/docker/Dockerfile`
-
-3단계로 구성된 멀티스테이지 빌드:
-
-### 1. 베이스 스테이지
-- `node:18-alpine`을 기반으로 사용
-- Next.js 텔레메트리 비활성화
-- 호환성을 위한 libc6-compat 설치
-
-### 2. 개발 스테이지 (`dev`)
-- 작업 디렉토리: `/app`
-- 환경: `NODE_ENV=development`
-- 의존성 설치
-- 포트 3000 노출
-- 명령: `npm run dev`
-- 참고: 소스 코드는 복사되지 않고 볼륨 마운트됨
-
-### 3. 프로덕션 빌드 스테이지 (`builder`)
-- npm ci로 의존성 설치
-- 최적화를 위한 `npm run build` 실행
-- 출력: `.next/standalone` 및 `.next/static`
-
-### 4. 프로덕션 런타임 스테이지 (`production`)
-- 필요한 파일만 포함된 최소 이미지
-- 비루트 사용자: `nextjs` (UID 1001)
-- 실행: `node server.js`
-
-## 개발 워크플로우
-
-### 프로젝트 시작하기
-
-```bash
-# 프로젝트 디렉토리로 이동
-cd /data/successbank/projects/ultra
-
-# 모든 서비스 시작
+# 서비스 시작/중지
 docker-compose up -d
-
-# 로그 보기
+docker-compose down
 docker-compose logs -f app
 
-# 서비스 중지
-docker-compose down
+# 컨테이너 내부에서 실행 (docker exec -it ultra_app sh)
+npx prisma generate        # Prisma 클라이언트 생성
+npx prisma db push         # 스키마를 DB에 반영
+npx prisma studio          # DB GUI (브라우저)
+npm run db:seed             # 시드 데이터 (tsx prisma/seed.ts)
+npm run lint                # ESLint
+
+# 서비스 포트
+# 웹: localhost:5635 | DB: localhost:5636 | Redis: localhost:5637 | Adminer: localhost:5638
 ```
 
-### 서비스 접속
+docker-compose 시작 시 자동으로 `npm install --legacy-peer-deps && prisma generate && prisma db push && npm run dev`가 실행됩니다. 호스트에서 직접 `npm run dev` 실행 금지.
 
-- **Next.js 앱**: http://localhost:5635
-- **Adminer (DB UI)**: http://localhost:5638
-- **PostgreSQL**: `localhost:5636` (호스트에서) 또는 `database:5432` (컨테이너 내부)
-- **Redis**: `localhost:5637` (호스트에서) 또는 `redis:6379` (컨테이너 내부)
+## 아키텍처
 
-### 컨테이너 작업
+### 4개 사용자 역할과 라우트 그룹
 
-```bash
-# app 컨테이너 접속
-docker exec -it ultra_app sh
+| 역할 | enum | 라우트 | 레이아웃 접근제어 |
+|------|------|--------|-----------------|
+| 일반 사용자 | `USER` | `/`, `/products`, `/mypage/*`, `/cart` | 로그인 필요 (middleware) |
+| 병원 고객 | `HOSPITAL` | `/mypage/quotes/*` | USER와 동일 + 견적서 확인 |
+| 영업매니저 | `SALES_MANAGER` | `/sales-manager/*` | 역할 검증 (layout) |
+| 관리자 | `ADMIN` | `/admin/*` | 역할 검증 (middleware + layout) |
 
-# PostgreSQL CLI 접속
-docker exec -it ultra_db psql -U ultra_user -d ultra_db
+### 인증 아키텍처 (NextAuth v5 split config)
 
-# 컨테이너 상태 확인
-docker-compose ps
+- `src/lib/auth.config.ts`: Edge-compatible 설정 (JWT 콜백, 세션 콜백). **middleware에서 사용** — Node.js API (Prisma, bcrypt)를 import하면 안 됨
+- `src/lib/auth.ts`: 전체 설정 (PrismaAdapter, CredentialsProvider, 로그인 기록). **서버 컴포넌트/API에서 사용**
+- `src/middleware.ts`: auth.config 기반 미들웨어. 로그인 페이지 리다이렉트, 관리자 접근제어 담당
+- 세션에 `user.id`와 `user.role`이 JWT를 통해 포함됨 (auth.config.ts의 type augmentation 참조)
 
-# 코드 변경 후 재시작
-docker-compose restart app
-```
-
-### 데이터베이스 자격증명
-
-컨테이너 내부에서 사용:
-- 호스트: `database` (컨테이너 네트워크 호스트명)
-- 포트: `5432`
-- 사용자: `ultra_user`
-- 비밀번호: `lLi9CeCEgryaV3M06t9Oh3sKh`
-- 데이터베이스: `ultra_db`
-
-호스트 머신에서 사용:
-- 호스트: `localhost`
-- 포트: `5636` (컨테이너에서 매핑됨)
-
-## 중요한 개발 패턴
-
-1. **호스트에서 직접 `npm run dev` 실행하지 않기** - 팀원 간 일관성을 유지하고 포트 충돌을 피하기 위해 항상 Docker Compose를 사용하세요.
-
-2. **소스 코드 볼륨 마운트** - `./src:/app:cached` 볼륨 마운트는 핫 리로드를 가능하게 합니다. `src/` 내 파일 변경 사항은 컨테이너 재시작 없이 즉시 반영됩니다.
-
-3. **Node Modules 및 빌드 캐시** - `node_modules`와 `.next` 디렉토리는 익명 볼륨에 보관되어 호스트와 Alpine 컨테이너 간 OS별 충돌을 방지합니다.
-
-4. **데이터베이스 연결 문자열** - 컨테이너 내부에서는 항상 컨테이너 네트워크 호스트명 `database`를 사용하세요 (`localhost` 사용 금지). 호스트에서는 `localhost:5636`을 사용하세요.
-
-5. **환경 변수** - `DATABASE_URL`과 `REDIS_URL`은 `.env` 변수로부터 자동으로 구성되어 app 컨테이너에 주입됩니다.
-
-6. **핫 리로드 설정** - `WATCHPACK_POLLING=true`는 표준 파일 시스템 이벤트가 안정적으로 작동하지 않는 Docker 환경에서 파일 감시를 활성화합니다.
-
-7. **Next.js 텔레메트리** - `NEXT_TELEMETRY_DISABLED=1`을 통해 비활성화되어 개발 중 외부 네트워크 호출을 방지합니다.
-
-## Next.js App Router 구조
-
-프로젝트는 Next.js App Router(파일 기반 라우팅)를 사용합니다:
+### App Router 구조
 
 ```
 src/app/
-├── page.js          # 경로: /
-└── [other routes]   # 필요에 따라 추가
+├── (공개)     page, about, contact, faq, products, products/[id], login
+├── admin/
+│   ├── (auth)/login/          # 관리자 로그인 (별도 레이아웃, Header/Footer 없음)
+│   └── (protected)/           # 관리자 전용 (AdminSidebar + AdminHeader 레이아웃)
+│       ├── dashboard, products, orders, users, reviews, categories, quotes
+│       └── settings/carousels/  # 캐러셀 CRUD
+├── mypage/                    # 마이페이지 (사이드바 레이아웃)
+│   ├── orders, wishlist, settings, login-history, quotes
+├── sales-manager/             # 영업매니저 (전용 헤더/네비 레이아웃)
+│   ├── customers, customers/[id]/quote, quotes
+├── cart/
+└── api/                       # API 라우트 (아래 참조)
 ```
 
-- `page.js` 또는 `page.tsx`로 명명된 파일이 라우트를 정의합니다
-- `layout.js` 파일은 공유 레이아웃을 정의합니다
-- 동적 라우트는 `[param]` 문법을 사용합니다
-- 각 디렉토리 레벨이 URL 세그먼트가 됩니다
+### API 라우트 패턴
 
-## 데이터 영속성
+- `/api/auth/[...nextauth]` — NextAuth 핸들러
+- `/api/auth/register` — 회원가입
+- `/api/cart`, `/api/wishlist`, `/api/contact` — 사용자 기능
+- `/api/products/[id]/reviews` — 상품 리뷰 CRUD
+- `/api/admin/*` — 관리자 전용 (products, categories, reviews, quotes, carousels)
+- `/api/sales-manager/*` — 영업매니저 전용 (customers, quotes)
+- `/api/quotes/*` — 고객 견적서 조회/응답
+- `/api/upload/review-images` — 리뷰 이미지 업로드
 
-### PostgreSQL 데이터
-- 볼륨: `postgres_data`
-- 컨테이너 내 위치: `/var/lib/postgresql/data`
-- 컨테이너 재시작 및 down/up 사이클에서 유지됨
+### 핵심 데이터 모델 (Prisma)
 
-### Redis 데이터
-- 볼륨: `redis_data`
-- 컨테이너 내 위치: `/data`
-- 컨테이너 재시작에서 유지됨
+스키마: `src/prisma/schema.prisma`
 
-### 백업
-- 수동 데이터베이스 백업은 `/backups` 디렉토리에 저장할 수 있습니다
-- 백업/복원 작업은 컨테이너 로그를 참조하세요
+주요 모델: User, Product, Category(3레벨 계층), Cart/CartItem, Order/OrderItem, Review(승인제), Quote/QuoteItem(견적서), Carousel, Contact, LoginHistory, Wishlist
 
-## 로그
+- Category는 자기참조 관계 (parentId)로 대/중/소 3단계 분류
+- Product 가격은 `Int` (원화, 원 단위), 할인은 `%`
+- Review는 PENDING → APPROVED/REJECTED 승인 워크플로우
+- Quote는 PENDING → SENT → APPROVED/REJECTED → ORDERED 워크플로우
 
-애플리케이션 및 컨테이너 로그는 자동 순환 방식으로 `/logs` 디렉토리에 저장됩니다:
-- 파일당 최대 크기: 10MB
-- 보존 기간: 3개 파일 (약 30MB 총량)
-- 형식: 타임스탬프, 소스, 스트림 정보가 포함된 JSON
+### 주요 라이브러리 사용
 
-## 추가 참고사항
+- `src/lib/prisma.ts` — Prisma 싱글턴 (globalThis 패턴으로 핫리로드 시 연결 관리)
+- `src/lib/redis.ts` — Redis 클라이언트 + 장바구니 캐시 헬퍼 (7일 TTL)
+- `src/lib/pdfGenerator.ts` — 견적서 PDF 생성 (한글 폰트 Base64 내장)
+- `src/lib/loginHistory.ts` — 로그인 기록 저장 (IP, UA, GeoIP)
+- `src/components/ui/*` — shadcn/ui 스타일 컴포넌트 (Button, Input, Card, etc.)
+- `src/components/providers/SessionProvider.tsx` — NextAuth SessionProvider 래퍼
 
-### 프로젝트 템플릿 상태
-이 프로젝트는 템플릿 또는 최소 스타터 애플리케이션으로 보입니다:
-- 최소한의 의존성만 포함 (Next.js, React, React-DOM만)
-- 플레이스홀더 콘텐츠가 있는 단일 페이지 (`page.js`)
-- 기능 개발 준비 완료
+## 중요 규칙
 
-### 개발을 위한 다음 단계
-1. `src/app/`에 추가 페이지로 App Router 확장
-2. `src/package.json`에 필요한 의존성 추가
-3. 필요한 경우 데이터베이스 스키마 및 ORM 구성 (Prisma 권장)
-4. `src/app/api/`에 API 라우트 구현
-5. 스타일링 솔루션 추가 (Tailwind CSS, styled-components 등)
-
-### 성능 고려사항
-- 멀티스테이지 Docker 빌드로 프로덕션 이미지 크기 최적화
-- Alpine 이미지로 기본 크기 및 공격 표면 최소화
-- node_modules의 볼륨 마운팅으로 소스 변경 시 npm 재설치 방지
-- `.next`용 익명 볼륨으로 빌드 캐시 일관성 보장
-
-## Task Master AI Instructions
-**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
-@./.taskmaster/CLAUDE.md
+1. **Docker 전용 개발** — `./src:/app:cached` 볼륨 마운트로 핫리로드. node_modules와 .next는 도커 볼륨
+2. **컨테이너 내 DB 호스트** — `database:5432` 사용 (localhost 금지)
+3. **node:18-slim** 이미지 사용 (Prisma Debian binary 호환을 위해 alpine이 아닌 slim)
+4. **Prisma 바이너리** — `debian-openssl-3.0.x` 타겟 필요 (docker-compose.yml의 PRISMA_CLI_BINARY_TARGETS)
+5. **npm install --legacy-peer-deps** — peer dependency 충돌 방지를 위해 필수
+6. **이미지 도메인** — next.config.js에 Unsplash, AWS S3, Cloudinary 허용됨
