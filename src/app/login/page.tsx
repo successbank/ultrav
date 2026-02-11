@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react'
 import Button from '@/components/ui/Button'
@@ -124,9 +125,9 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-600">
-            Ultra 쇼핑몰
-          </h1>
+          <Link href="/">
+            <Image src="/images/logo.png" alt="Ultra" width={180} height={60} className="mx-auto object-contain h-auto" unoptimized />
+          </Link>
           <p className="mt-2 text-gray-600">
             {isLogin ? '로그인하여 쇼핑을 시작하세요' : '회원가입하고 쇼핑을 시작하세요'}
           </p>

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { User } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import UserDropdown from '@/components/ui/UserDropdown'
@@ -11,8 +12,8 @@ export default async function Header() {
     <header className="border-b bg-white sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-blue-600">
-            ultra V
+          <Link href="/">
+            <Image src="/images/logo.png" alt="Ultra" width={120} height={40} className="object-contain h-auto" unoptimized />
           </Link>
 
           <nav className="flex items-center gap-6">
