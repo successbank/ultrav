@@ -22,6 +22,7 @@ services:
       - AUTH_SECRET=${AUTH_SECRET}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST}
     working_dir: /app
     volumes:
       - ./src:/app:cached
@@ -35,7 +36,7 @@ services:
       - database
       - redis
     logging: *default-logging
-    command: bash -c "apt-get update && apt-get install -y openssl ca-certificates && npm install --legacy-peer-deps && npx prisma generate && npm run dev"
+    command: bash -c "apt-get update && apt-get install -y openssl ca-certificates && npm install --legacy-peer-deps && npx prisma generate && npx prisma db push && npm run dev"
 
   database:
     image: postgres:15-alpine
