@@ -8,12 +8,16 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ArrowLeft, Save, ImageIcon, Code, LayoutTemplate } from "lucide-react";
 import ImageUploader from "@/components/admin/ImageUploader";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { popupTemplates } from "@/lib/popupTemplates";
 
 export default function NewPopupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  // 콘텐츠 편집 모드: 웹에디터(기본) / HTML 소스
+  // 템플릿은 div·표 기반 레이아웃이라 웹에디터(Quill) 변환 시 깨질 수 있어 HTML 모드로 편집
+  const [editorMode, setEditorMode] = useState<"editor" | "html">("editor");
   const [formData, setFormData] = useState({
     title: "",
     contentType: "image" as "image" | "html",
@@ -43,6 +47,23 @@ export default function NewPopupPage() {
       height: template.height,
       title: `[템플릿] ${template.name}`,
     });
+    setEditorMode("html"); // 템플릿 레이아웃 보존을 위해 HTML 소스 모드로 전환
+    setShowPreview(false);
+  };
+
+  const handleEditorModeChange = (mode: "editor" | "html") => {
+    if (mode === editorMode) return;
+    // HTML → 웹에디터 전환 시 복잡한 레이아웃(템플릿 등)은 단순화될 수 있음을 경고
+    if (
+      mode === "editor" &&
+      /<(div|table|section)[\s>]/i.test(formData.content)
+    ) {
+      const confirmed = window.confirm(
+        "웹에디터로 전환하면 템플릿 등 복잡한 레이아웃(표·영역 구조)이 단순화될 수 있습니다.\n전환할까요?",
+      );
+      if (!confirmed) return;
+    }
+    setEditorMode(mode);
     setShowPreview(false);
   };
 
@@ -231,20 +252,54 @@ export default function NewPopupPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  HTML 콘텐츠 <span className="text-red-500">*</span>
+                  콘텐츠 <span className="text-red-500">*</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  {showPreview ? "에디터 보기" : "미리보기"}
-                </button>
+                <div className="flex items-center gap-3">
+                  <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+                    <button
+                      type="button"
+                      onClick={() => handleEditorModeChange("editor")}
+                      className={`px-3 py-1.5 transition-colors ${
+                        editorMode === "editor"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      웹에디터
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEditorModeChange("html")}
+                      className={`px-3 py-1.5 border-l border-gray-300 transition-colors ${
+                        editorMode === "html"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      HTML 소스
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    {showPreview ? "에디터 보기" : "미리보기"}
+                  </button>
+                </div>
               </div>
               {showPreview ? (
                 <div
                   className="border rounded-lg p-4 min-h-[200px] max-h-[400px] overflow-auto bg-white"
                   dangerouslySetInnerHTML={{ __html: formData.content }}
+                />
+              ) : editorMode === "editor" ? (
+                <RichTextEditor
+                  value={formData.content}
+                  onChange={(value) =>
+                    setFormData({ ...formData, content: value })
+                  }
+                  placeholder="팝업 내용을 입력하세요..."
                 />
               ) : (
                 <textarea
@@ -257,7 +312,9 @@ export default function NewPopupPage() {
                 />
               )}
               <p className="text-xs text-gray-500 mt-1">
-                인라인 스타일을 포함한 HTML을 직접 입력합니다
+                {editorMode === "editor"
+                  ? "웹에디터로 자유롭게 작성합니다. 템플릿 선택 시 레이아웃 보존을 위해 HTML 소스 모드로 전환됩니다"
+                  : "인라인 스타일을 포함한 HTML을 직접 입력합니다"}
               </p>
             </div>
           )}
