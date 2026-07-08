@@ -30,3 +30,6 @@ node_modules/
 
 # Playwright MCP
 .playwright-mcp/
+
+# MCP 설정 (API 키 포함 가능 — 커밋 금지)
+.mcp.json
