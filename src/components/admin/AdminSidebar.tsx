@@ -14,6 +14,7 @@ import {
   LogOut,
   FileText,
   Globe,
+  MessageSquare,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
@@ -25,6 +26,7 @@ const navigation = [
   { name: "견적서 관리", href: "/admin/quotes", icon: FileText },
   { name: "카테고리", href: "/admin/categories", icon: FolderTree },
   { name: "사용자 관리", href: "/admin/users", icon: Users },
+  { name: "문의 관리", href: "/admin/contacts", icon: MessageSquare },
   { name: "영문 문의", href: "/admin/inquiries", icon: Globe },
   { name: "공지사항 관리", href: "/admin/notices", icon: Megaphone },
   { name: "통계/리포트", href: "/admin/reports", icon: BarChart3 },
