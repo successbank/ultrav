@@ -1,0 +1,60 @@
+# CLAUDE.md
+
+## 1. 프로젝트
+<제품 한 줄: 누구를 위해 무엇을 한다>
+
+## 2. 공식 명령
+- dev: `pnpm dev`
+- build: `pnpm build`
+- test: `pnpm test`
+- lint: `pnpm lint`
+- typecheck: `pnpm typecheck`
+- eval: `node scripts/eval-runner.js --against-baseline`
+
+## 3. 모노레포 지도
+- apps/{web,mobile(RN),android-native(Kotlin/Compose),desktop,watch-ios,watch-wear,xr-vision,xr-android,xr-quest}
+- packages/{core,db-schema,sync-engine,ui-kit,auth,telemetry}
+- services/{api,sync-gateway,embedding-worker}
+- docs/loops/  ← 루프 spec(YAML) 보관 (트랙 F)
+
+## 4. 테스트 정책
+- 단위 70%(Vitest) / 계약 15%(tRPC snapshot) / 통합 10%(Testcontainers) / E2E 5%
+- 플랫폼 E2E: Playwright(web), Maestro(mobile/desktop), XCUITest/UiAutomator(watch)
+- XR은 휴먼 평가 골든케이스로 보완
+
+## 5. 커밋·PR 규칙
+- Conventional Commits
+- PR 본문: 무엇/왜/테스트/위험/롤백
+- 머지 전 자가 체크리스트 (release-checklist 스킬)
+
+## 6. 금지
+- --no-verify 금지
+- secrets 커밋 금지 (pre-edit-pii-scan 강제)
+- any 도입 금지 (typecheck 실패)
+- 마이그레이션 down 없이 머지 금지
+
+## 7. 위임
+- 코드 탐색은 code-explorer 먼저
+- 큰 변경 후 critic-reviewer + test-architect 병렬
+- 새 PRD/FEATURE/BUGFIX 시작 시 pre-development-search.sh → hybrid-searcher
+- 모바일/데스크톱/워치/XR 변경은 각각 *-builder 서브에이전트
+- 안드로이드 네이티브(Kotlin/Compose)는 android-native-builder
+- iOS 네이티브(Swift/SwiftUI)는 ios-native-builder
+- 반복·자율 작업은 loop-pattern-select(패턴) → loop-orchestrator(설계·fan-out) → loop-grader(채점) → loop-reflector(교훈) → loop-budget-guard(상한)
+
+## 8. 게이트
+- pre-pr-eval-gate.sh 통과
+- typecheck + lint + test 100%
+- 영향 플랫폼 빌드 성공 (안드로이드=pre-android-build.sh, iOS=pre-ios-build.sh)
+- 자율 루프는 BUDGET/STOP 결정적 hook 안에서만 (loop-budget-cap.sh / loop-tick-stop-check.sh)
+
+## 9. 컨텍스트
+- 공유DB MCP: search_hybrid, knowledge_insert, errors_insert, audit_insert, route_model, usage_record, loop_run_record, loop_lesson_record, loop_lesson_search
+- 디자인: Figma MCP (있을 때만)
+- GitHub MCP: PR/이슈 자동화
+
+## 10. 루프 주도 개발 (트랙 F·H)
+- 매번 프롬프트하지 말고 루프를 설계: T16_LOOP → loop-design → loop-run
+- 6요소: TRIGGER/SCOPE/ACTION/BUDGET/STOP/REPORT + 3 운영 규율(CONTEXT 컨텍스트 위생 / PROGRESS 무진행 감지 / REFLECT 리플렉션 기억)
+- 머지·릴리스·시크릿·마이그레이션 down은 사람 승인 게이트
+- 드롭인 후 "V9 시스템을 현재 개발에 맞게 최적화" 실행 → 사용방법/AI주도개발_드롭인_최적화.md

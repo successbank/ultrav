@@ -1,0 +1,14 @@
+name: personas-eval
+on:
+  pull_request:
+  schedule: [{ cron: "0 18 * * *" }]   # 03:00 KST
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/eval-runner.js --against-baseline --threshold=0.95

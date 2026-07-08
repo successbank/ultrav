@@ -1,0 +1,13 @@
+name: mobile-offline-sync
+category: platform
+env: staging
+inputs:
+  scenario: |
+    iOS·Android 2대에서 동일 task 동시 수정 → 비행기 모드 30분 → 온라인 복귀
+expected:
+  must_contain: ["충돌 해결", "vector clock", "사용자 마지막 의도 보존"]
+  metrics:
+    sync_lag_s_p95: { lt: 5 }
+    conflict_loss_rate: { eq: 0 }
+score_weights: { correctness: 0.7, cost: 0.1, latency: 0.2 }
+baseline: { model: sonnet-4-6, score: 0.9 }

@@ -1,0 +1,4 @@
+{ "title": "Eval Regression (V7)", "panels": [
+  { "type":"timeseries","title":"카테고리별 평균 점수","targets":[{"expr":"avg by (category)(eval_score)"}]},
+  { "type":"table","title":"baseline 대비 회귀","targets":[{"expr":"(eval_score - eval_baseline_score) < -0.05"}]}
+] }

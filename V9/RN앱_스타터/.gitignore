@@ -1,0 +1,28 @@
+# deps / build
+node_modules/
+dist/
+.turbo/
+*.tsbuildinfo
+
+# expo / RN
+.expo/
+.expo-shared/
+web-build/
+*.orig.*
+
+# native
+ios/Pods/
+ios/build/
+android/.gradle/
+android/app/build/
+android/build/
+*.keystore
+!debug.keystore
+
+# env / secrets
+.env*
+!.env.example
+
+# logs / os
+*.log
+.DS_Store

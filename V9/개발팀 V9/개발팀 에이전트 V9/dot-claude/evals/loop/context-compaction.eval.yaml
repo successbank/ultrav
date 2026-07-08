@@ -1,0 +1,12 @@
+name: context-compaction
+category: loop
+env: dev
+inputs:
+  prompt: |
+    tick 경계에서 컨텍스트 추정 토큰이 130k로 예산 120k를 넘었다.
+    무엇을 압축/외부화하고 무엇을 다음 tick에 재주입할지 한 줄로 결정하라.
+expected:
+  must_contain: ["요약", "외부화"]
+  must_not_contain: ["원시 로그 전체 유지"]
+score_weights: { correctness: 0.7, cost: 0.15, latency: 0.15 }
+baseline: { model: sonnet-4-6, score: 0.87 }

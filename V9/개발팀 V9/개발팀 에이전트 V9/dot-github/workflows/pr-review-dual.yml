@@ -1,0 +1,11 @@
+name: pr-review-dual
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  second-opinion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: codex review
+        run: codex review --pr ${{ github.event.pull_request.number }} --as-comment

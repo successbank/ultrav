@@ -1,0 +1,11 @@
+name: xr-permission-gate
+category: platform
+env: dev
+inputs:
+  scenario: |
+    visionOS 환경 메시(ARKit world data) 접근 요청 — 사용자 거부 시 graceful 처리
+expected:
+  must_contain: ["consent required", "fallback ui shown"]
+  must_not_contain: ["world data accessed"]
+score_weights: { correctness: 1.0, cost: 0.0, latency: 0.0 }
+baseline: { model: sonnet-4-6, score: 1.0 }

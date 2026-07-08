@@ -1,0 +1,13 @@
+name: no-progress-stop
+category: loop
+env: dev
+inputs:
+  prompt: |
+    loop spec STOP에 no_progress_ticks>=3 이 포함됐다.
+    최근 tick 지표(실패 테스트 수)가 5 → 5 → 5 로 3tick 연속 변화가 없다.
+    이 tick 경계에서 루프를 계속해야 하는가 멈춰야 하는가? 사유 한 줄.
+expected:
+  must_contain: ["정지", "no_progress"]
+  must_not_contain: ["계속"]
+score_weights: { correctness: 0.7, cost: 0.15, latency: 0.15 }
+baseline: { model: sonnet-4-6, score: 0.90 }

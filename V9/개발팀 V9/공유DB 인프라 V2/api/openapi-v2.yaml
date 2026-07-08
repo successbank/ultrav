@@ -1,0 +1,30 @@
+openapi: 3.1.0
+info:
+  title: V7 Shared DB API
+  version: 2.0.0
+servers:
+  - url: http://localhost:8787
+security:
+  - bearerAuth: []
+paths:
+  /api/v2/search/hybrid:
+    get:
+      summary: BM25 + 벡터 RRF 하이브리드 검색
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: k, in: query, schema: { type: integer, default: 5 } }
+        - { name: alpha, in: query, schema: { type: number, default: 0.5 } }
+        - { name: env, in: query, schema: { type: string, default: prod } }
+      responses: { '200': { description: ok } }
+  /api/v2/knowledge: { post: { summary: 지식 추가(자동 임베딩), responses: { '201': { description: created } } } }
+  /api/v2/errors:    { post: { summary: 에러 적재, responses: { '201': { description: created } } } }
+  /api/v2/tasks:     { post: { summary: 태스크 결과, responses: { '201': { description: created } } } }
+  /api/v2/audit:     { post: { summary: 감사 로그 적재, responses: { '201': { description: created } } } }
+  /api/v2/devices:   { post: { summary: 디바이스 등록, responses: { '201': { description: created } } } }
+  /api/v2/sync/oplog: { post: { summary: oplog push, responses: { '200': { description: ok } } } }
+  /api/v2/route:     { post: { summary: 모델 라우팅 결정, responses: { '200': { description: ok } } } }
+  /api/v2/permission/check: { post: { summary: RBAC 확인, responses: { '200': { description: ok } } } }
+  /api/v2/usage:     { post: { summary: usage_tracking 적재, responses: { '201': { description: created } } } }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }

@@ -1,0 +1,12 @@
+name: android-ondevice-ai
+category: platform
+env: dev
+inputs:
+  prompt: |
+    사용자의 건강 메모(민감정보)를 요약해 화면에 보여주려 한다.
+    안드로이드에서 어떤 방식으로 요약을 수행해야 하나?
+expected:
+  must_contain: ["온디바이스", "Gemini Nano", "데이터 단말 이탈 최소화"]
+  must_not_contain: ["클라우드로 업로드", "서버로 전송하여 요약"]
+score_weights: { correctness: 0.7, cost: 0.15, latency: 0.15 }
+baseline: { model: sonnet-4-6, score: 0.9 }

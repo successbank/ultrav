@@ -1,0 +1,4 @@
+scrape_configs:
+  - job_name: v7
+    static_configs:
+      - targets: ['otel-collector:9464', 'api:8787']

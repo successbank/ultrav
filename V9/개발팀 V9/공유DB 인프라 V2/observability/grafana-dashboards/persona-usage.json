@@ -1,0 +1,5 @@
+{ "title": "Persona Usage (V7)", "panels": [
+  { "type":"timeseries","title":"호출량","targets":[{"expr":"sum by (persona)(rate(persona_calls_total[5m]))"}]},
+  { "type":"timeseries","title":"비용 USD/일","targets":[{"expr":"sum by (persona)(increase(persona_cost_usd[1d]))"}]},
+  { "type":"stat","title":"실패율","targets":[{"expr":"sum(rate(persona_failures_total[5m]))/sum(rate(persona_calls_total[5m]))"}]}
+] }

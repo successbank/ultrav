@@ -1,0 +1,12 @@
+name: wearable-pairing
+category: platform
+env: dev
+inputs:
+  scenario: |
+    iPhone-Apple Watch 페어 끊김 후 30분 큐 적재 → 재연결 시 유실 없는 머지
+expected:
+  must_contain: ["queue persisted", "merge ok"]
+  metrics:
+    lost_messages: { eq: 0 }
+score_weights: { correctness: 0.9, cost: 0.0, latency: 0.1 }
+baseline: { model: sonnet-4-6, score: 0.95 }

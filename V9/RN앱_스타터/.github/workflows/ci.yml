@@ -1,0 +1,24 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+  # iOS/Android 네이티브 빌드는 EAS(클라우드) 또는 로컬에서:
+  #   eas build -p ios --profile preview
+  #   eas build -p android --profile preview
+  # 서명 시크릿이 필요하므로 CI 자동 빌드는 별도 워크플로로 분리 권장.

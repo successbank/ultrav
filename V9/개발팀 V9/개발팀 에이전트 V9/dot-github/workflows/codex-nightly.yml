@@ -1,0 +1,13 @@
+name: codex-nightly
+on:
+  schedule: [{ cron: "0 16 * * *" }]   # 01:00 KST
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: dispatch codex tasks (draft PRs only)
+        run: |
+          codex run \
+            --task "deps update + tests + doc sync" \
+            --output draft-pr

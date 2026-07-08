@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: v7
+      POSTGRES_PASSWORD: v7secret
+      POSTGRES_DB: v7
+    ports: ["5432:5432"]
+    volumes: ["./pgdata:/var/lib/postgresql/data", "./schema:/docker-entrypoint-initdb.d:ro"]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  api:
+    build: ../api
+    environment:
+      DATABASE_URL: postgres://v7:v7secret@postgres:5432/v7
+      JWT_SECRET: change-me
+    depends_on: [postgres, redis]
+    ports: ["8787:8787"]
+  embedding-worker:
+    build: ../embedding-worker
+    environment:
+      DATABASE_URL: postgres://v7:v7secret@postgres:5432/v7
+      REDIS_URL: redis://redis:6379
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on: [postgres, redis]
+  otel-collector:
+    image: otel/opentelemetry-collector:0.99.0
+    volumes: ["../observability/otel-collector.yaml:/etc/otelcol/config.yaml:ro"]
+    ports: ["4317:4317"]
+  prometheus:
+    image: prom/prometheus:latest
+    volumes: ["../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+  grafana:
+    image: grafana/grafana:latest
+    ports: ["3000:3000"]

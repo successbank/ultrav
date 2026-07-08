@@ -1,0 +1,11 @@
+name: model-routing-cost
+category: routing
+env: dev
+inputs:
+  workload: ./fixtures/routing/workload-mix.json
+expected:
+  metrics:
+    cost_reduction_vs_all_opus_pct: { gte: 40 }
+    correctness_loss_pct: { lt: 2 }
+score_weights: { correctness: 0.5, cost: 0.5, latency: 0.0 }
+baseline: { cost_reduction: 0.45 }

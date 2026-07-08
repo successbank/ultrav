@@ -1,0 +1,10 @@
+name: sre-incident-triage
+category: persona
+env: dev
+inputs:
+  prompt: |
+    [INCIDENT] mobile API 5xx 30% 급증, 5분 전 시작. 영향 추정 트래픽 70%. 어떻게 대응?
+expected:
+  must_contain: ["롤백", "feature flag", "kill switch", "임시 완화", "근본 원인"]
+score_weights: { correctness: 0.7, cost: 0.1, latency: 0.2 }
+baseline: { model: sonnet-4-6, score: 0.9 }

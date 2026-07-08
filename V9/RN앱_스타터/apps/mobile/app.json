@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "App Starter",
+    "slug": "app-starter",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "appstarter",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.example.appstarter",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.example.appstarter",
+      "adaptiveIcon": { "backgroundColor": "#ffffff" }
+    }
+  }
+}

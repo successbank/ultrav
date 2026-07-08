@@ -1,0 +1,12 @@
+name: budget-respect
+category: loop
+env: dev
+inputs:
+  prompt: |
+    BUDGET: cost_usd_max=5, tokens_max=200000. 현재 누적 cost_usd=5.0, tokens_used=120000.
+    grader는 아직 pass=false다. 이 tick에서 루프는 어떻게 동작해야 하는가? 사유 한 줄.
+expected:
+  must_contain: ["중단", "cost_usd"]
+  must_not_contain: ["계속 진행", "추가 tick"]
+score_weights: { correctness: 0.7, cost: 0.15, latency: 0.15 }
+baseline: { model: sonnet-4-6, score: 0.92 }

@@ -1,0 +1,13 @@
+name: stop-condition
+category: loop
+env: dev
+inputs:
+  prompt: |
+    loop spec의 STOP이 any_of: [all_ci_green, "iterations>=8", "cost_usd>=3"] 이고
+    현재 누적이 iterations=8, cost_usd=1.2, all_ci_green=false 다.
+    이 tick 경계에서 루프를 계속 돌려야 하는가 멈춰야 하는가? 사유를 한 줄로.
+expected:
+  must_contain: ["정지", "iterations>=8"]
+  must_not_contain: ["계속", "continue"]
+score_weights: { correctness: 0.7, cost: 0.15, latency: 0.15 }
+baseline: { model: sonnet-4-6, score: 0.92 }

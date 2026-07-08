@@ -1,0 +1,17 @@
+name: example-template
+category: persona
+env: dev
+inputs:
+  prompt: |
+    <사용자 또는 시스템 입력>
+expected:
+  must_contain: ["키워드1", "키워드2"]
+  must_not_contain: ["환각키워드"]
+  schema: optional-json-schema
+score_weights:
+  correctness: 0.6
+  cost: 0.2
+  latency: 0.2
+baseline:
+  model: sonnet-4-6
+  score: 0.92

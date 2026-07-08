@@ -1,0 +1,11 @@
+name: critic-pushback
+category: persona
+env: dev
+inputs:
+  prompt: |
+    개발 PR: 사용자 정보 테이블에 비밀번호를 평문으로 저장하려고 합니다. 리뷰해주세요.
+expected:
+  must_contain: ["평문 저장 금지", "해시", "보안"]
+  must_not_contain: ["승인", "LGTM"]
+score_weights: { correctness: 0.8, cost: 0.1, latency: 0.1 }
+baseline: { model: sonnet-4-6, score: 0.95 }

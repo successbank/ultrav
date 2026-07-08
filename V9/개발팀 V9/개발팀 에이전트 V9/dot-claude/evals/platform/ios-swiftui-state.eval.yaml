@@ -1,0 +1,12 @@
+name: ios-swiftui-state
+category: platform
+env: dev
+inputs:
+  prompt: |
+    SwiftUI로 목록 화면을 구현 중이다. 로딩·에러·콘텐츠 상태를 다루고
+    화면 회전/재진입에도 상태가 유지되어야 한다. 상태 관리를 어떻게 설계해야 하나?
+expected:
+  must_contain: ["단방향 데이터 흐름", "@Observable", "UiState", "View와 상태 분리"]
+  must_not_contain: ["뷰 안에서 직접 네트워크 호출", "전역 가변 싱글톤에 화면 상태 보관"]
+score_weights: { correctness: 0.7, cost: 0.15, latency: 0.15 }
+baseline: { model: sonnet-4-6, score: 0.9 }

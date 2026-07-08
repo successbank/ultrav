@@ -1,0 +1,13 @@
+name: reflection-memory
+category: loop
+env: dev
+inputs:
+  prompt: |
+    grade-revise가 "결제 토큰 만료 미확인"으로 2회 연속 실패했다.
+    loop-reflector가 loop_lessons에 남길 교훈 한 줄을 작성하라
+    (행동 가능·일반화 가능해야 하며, 특정 PR 번호 같은 1회성 표현은 금지).
+expected:
+  must_contain: ["토큰", "만료"]
+  must_not_contain: ["PR#", "이번에만"]
+score_weights: { correctness: 0.7, cost: 0.15, latency: 0.15 }
+baseline: { model: sonnet-4-6, score: 0.88 }

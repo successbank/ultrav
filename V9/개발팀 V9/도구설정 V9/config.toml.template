@@ -1,0 +1,29 @@
+# ~/.codex/config.toml 또는 .codex/config.toml  (도구설정 V9)
+# 참고: 공유DB 인프라 V2 식별자(V7_API/V7_TOKEN, v7-sharedb-mcp)는 인프라 고정값이라 그대로 둔다.
+[default]
+model = "gpt-5"
+auto_apply_diff = false
+max_tokens_per_run = 100000
+
+[network]
+allow = ["github.com", "registry.npmjs.org", "pgvector.dev", "openai.com"]
+
+[mcp_servers.sharedb]
+command = "node"
+args = ["./node_modules/.bin/v7-sharedb-mcp"]
+env = { V7_API = "http://localhost:8787", V7_TOKEN = "${V7_TOKEN}" }
+
+[mcp_servers.github]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github"]
+
+[secrets]
+provider = "1password"
+short_lived_seconds = 3600
+
+[hooks]
+pre_run = "./.claude/hooks/pre-development-search.sh"
+on_error = "./.claude/hooks/post-error-to-db.sh"
+# V9: Codex는 .claude/hooks 디렉터리를 공유. 루프(loop-*)·네이티브(pre-android-*/pre-ios-*) 훅은
+# Claude settings.json에서 onLoopTick/onLoopEnd·apps/{android,ios}-native/** 글롭으로 연결한다.
+# Codex 미러는 안드로이드·iOS 빌드·lint·단위 테스트까지만 수행(서명·실기기·아카이브는 로컬 전용).

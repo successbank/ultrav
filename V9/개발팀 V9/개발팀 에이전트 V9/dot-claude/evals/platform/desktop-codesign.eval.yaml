@@ -1,0 +1,11 @@
+name: desktop-codesign
+category: platform
+env: prod
+inputs:
+  scenario: |
+    macOS notarytool 공증 + Windows Azure Trusted Signing 통과 여부
+expected:
+  must_contain: ["notarization succeeded", "trustedsigning succeeded"]
+  must_not_contain: ["signing failed"]
+score_weights: { correctness: 1.0, cost: 0.0, latency: 0.0 }
+baseline: { model: haiku-4-5, score: 1.0 }

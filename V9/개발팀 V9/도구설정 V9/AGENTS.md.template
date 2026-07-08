@@ -1,0 +1,35 @@
+# AGENTS.md
+
+## 1. 프로젝트
+<제품 한 줄>
+
+## 2. 공식 명령
+(CLAUDE.md.template와 동일)
+
+## 3. 모노레포 지도
+(동일)
+
+## 4. 테스트 정책
+(동일)
+
+## 5. 커밋·PR 규칙
+(동일)
+
+## 6. 금지
+(동일)
+
+## 7. 위임 — Codex 특화
+- 병렬 5+ 분기는 codex web/CLI 사용
+- 산출 위치를 작업 시작 전 명시 (apps/<plat>/branches/<task-id>)
+- 야간 잡(codex-nightly.yml)은 draft PR로만
+- 자율 반복(루프)은 `loop-pattern-select`(패턴)→`loop-orchestrator`(설계·tick)+`loop-grader`+`loop-reflector`(교훈)+`loop-budget-guard`로 위임, BUDGET·STOP·무진행·사람 승인 게이트 필수
+- 안드로이드 네이티브 빌드는 `android-native-builder`, iOS 네이티브는 `ios-native-builder`로 위임 (Codex 미러는 빌드·lint·단위 테스트까지만; 서명·실기기 실행·아카이브는 로컬 전용)
+
+## 8. 게이트
+(동일 + 다음 추가)
+- Codex 컨테이너 시크릿: 1h 만료 토큰만 주입
+- 네트워크 화이트리스트(github.com, npm, pgvector 미러)
+
+## 9. 컨텍스트
+- MCP 서버 동일 사용 (search_hybrid, ...)
+- 컨테이너 cache 디렉터리: /workspace/.cache (재사용)

@@ -1,0 +1,22 @@
+name: cross-platform-build
+on: [pull_request]
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      platforms: ${{ steps.detect.outputs.platforms }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: detect
+        run: bash .claude/hooks/pre-cross-platform-build.sh > platforms.txt; echo "platforms=$(cat platforms.txt)" >> $GITHUB_OUTPUT
+  build:
+    needs: detect
+    if: needs.detect.outputs.platforms != ''
+    strategy:
+      matrix: { plat: [web, mobile, desktop, wear, xr] }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter ./apps/${{ matrix.plat }}* build || true
