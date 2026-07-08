@@ -1,22 +1,22 @@
-import type { NextAuthConfig } from "next-auth"
-import type { UserRole } from "@prisma/client"
+import type { NextAuthConfig } from "next-auth";
+import type { UserRole } from "@prisma/client";
 
 declare module "next-auth" {
   interface Session {
     user: {
-      id: string
-      role: UserRole
-    } & import("next-auth").DefaultSession["user"]
+      id: string;
+      role: UserRole;
+    } & import("next-auth").DefaultSession["user"];
   }
 
   interface User {
-    role: UserRole
+    role: UserRole;
   }
 }
 
 declare module "@auth/core/jwt" {
   interface JWT {
-    role: UserRole
+    role: UserRole;
   }
 }
 
@@ -30,30 +30,30 @@ export const authConfig: NextAuthConfig = {
   },
   callbacks: {
     authorized: async ({ auth, request }) => {
-      const { pathname } = request.nextUrl
+      const { pathname } = request.nextUrl;
 
       // 로그인 페이지는 항상 접근 허용
       if (pathname === "/login" || pathname === "/admin/login") {
-        return true
+        return true;
       }
 
       // 다른 페이지는 미들웨어에서 처리
-      return undefined
+      return undefined;
     },
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
-        token.id = user.id
+        token.role = user.role;
+        token.id = user.id;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role
+        session.user.id = token.id as string;
+        session.user.role = token.role as UserRole;
       }
-      return session
+      return session;
     },
   },
   providers: [],
-}
+};

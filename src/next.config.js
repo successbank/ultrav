@@ -14,6 +14,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.cloudinary.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.ultrav.co.kr',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ultrav.co.kr',
+      },
     ],
   },
 }
