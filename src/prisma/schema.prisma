@@ -10,14 +10,20 @@ datasource db {
 }
 
 // User & Authentication Models
+enum UserLocale {
+  KO // 한국어 회원 (기본)
+  EN // 영어/기타 언어권 회원 (영문 사이트 가입)
+}
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String     @id @default(cuid())
+  email         String     @unique
   name          String?
-  password      String?   // bcrypt hashed password
+  password      String?    // bcrypt hashed password
   phone         String?
-  address       String?   @db.Text
-  role          UserRole  @default(USER)
+  address       String?    @db.Text
+  role          UserRole   @default(USER)
+  locale        UserLocale @default(KO) // 가입 언어권
   emailVerified DateTime?
   image         String?
   createdAt     DateTime  @default(now())
@@ -35,6 +41,7 @@ model User {
   quotesAsSalesManager Quote[]       @relation("SalesManagerQuotes")
 
   @@index([email])
+  @@index([locale])
   @@map("users")
 }
 
@@ -91,9 +98,11 @@ model VerificationToken {
 model Category {
   id          String     @id @default(cuid())
   name        String
+  nameEn      String?    // 영문 카테고리명 (영문 사이트용, 없으면 name 사용)
   slug        String     @unique
   description String?    @db.Text
   level       Int        // 1: 대분류, 2: 중분류, 3: 소분류
+  sortOrder   Int        @default(0) // 순서 (낮을수록 먼저)
   parentId    String?
   parent      Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
   children    Category[] @relation("SubCategories")
@@ -103,16 +112,22 @@ model Category {
 
   @@index([parentId])
   @@index([slug])
+  @@index([sortOrder])
   @@map("categories")
 }
 
 model Product {
-  id            String   @id @default(cuid())
-  name          String
-  brand         String
-  description   String?  @db.Text // 간단한 설명
-  detailContent String?  @db.Text // 상세 내용 (HTML)
-  price         Int      // 원화 단위 (원)
+  id              String   @id @default(cuid())
+  name            String
+  nameEn          String?  // 영문 상품명 (없으면 name 사용)
+  brand           String
+  description     String?  @db.Text // 간단한 설명
+  descriptionEn   String?  @db.Text // 영문 설명
+  detailContent   String?  @db.Text // 상세 내용 (HTML)
+  detailContentEn String?  @db.Text // 영문 상세 내용 (HTML)
+  moq             String?  // 최소 주문 수량 표기 (예: "100 Vials")
+  isFeaturedEn    Boolean  @default(false) // 영문 메인 Featured Products 노출
+  price           Int      // 원화 단위 (원)
   discount      Int      @default(0) // 할인율 (%)
   category      Category @relation(fields: [categoryId], references: [id])
   categoryId    String
@@ -120,6 +135,7 @@ model Product {
   images        String[] // 추가 이미지 URLs (최대 5장)
   stock         Int      @default(0)
   isActive      Boolean  @default(true)
+  isNew         Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -133,6 +149,8 @@ model Product {
   @@index([categoryId])
   @@index([brand])
   @@index([isActive])
+  @@index([isNew])
+  @@index([isFeaturedEn])
   @@map("products")
 }
 
@@ -373,4 +391,97 @@ model Carousel {
   @@index([order])
   @@index([isActive])
   @@map("carousels")
+}
+
+model LayerPopup {
+  id          String    @id @default(cuid())
+  title       String                          // 관리용 제목 (관리자 화면용)
+  contentType String    @default("image")     // "image" | "html"
+  imageUrl    String    @default("")          // 팝업 이미지 (Base64)
+  content     String?   @db.Text              // HTML 팝업용 콘텐츠
+  linkUrl     String?                         // 이미지 클릭 시 이동 URL
+  startDate   DateTime?                       // 노출 시작일 (null=즉시)
+  endDate     DateTime?                       // 노출 종료일 (null=무기한)
+  order       Int       @default(0)           // 표시 순서 (낮을수록 먼저)
+  isActive    Boolean   @default(true)        // 활성화 여부
+  width       Int       @default(480)         // 팝업 너비(px)
+  height      Int       @default(600)         // 팝업 높이(px)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([order])
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@map("layer_popups")
+}
+
+// Notice (공지사항) Models
+enum NoticeCategory {
+  GENERAL    // 일반
+  EVENT      // 이벤트
+  UPDATE     // 업데이트
+  IMPORTANT  // 중요
+}
+
+enum NoticeLocale {
+  KO // 한국어 사이트 공지
+  EN // 영문 사이트 공지
+}
+
+model Notice {
+  id        String         @id @default(cuid())
+  title     String
+  content   String         @db.Text
+  category  NoticeCategory @default(GENERAL)
+  locale    NoticeLocale   @default(KO)
+  isPinned  Boolean        @default(false)
+  isActive  Boolean        @default(true)
+  viewCount Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([category])
+  @@index([locale, isActive, createdAt]) // 공지 목록 조회 커버링 (locale+isActive 필터 + createdAt 정렬)
+  @@index([isActive, createdAt])
+  @@map("notices")
+}
+
+// Inquiry (영문 사이트 B2B 문의) Models
+enum InquiryType {
+  PRODUCT_QUOTATION // 제품 견적 요청
+  OEM_ODM           // OEM / ODM 문의
+  DISTRIBUTOR       // 총판/파트너십 문의
+  TECHNICAL         // 기술 지원
+  GENERAL           // 일반 문의
+}
+
+enum InquiryStatus {
+  PENDING     // 대기중
+  IN_PROGRESS // 처리중
+  RESOLVED    // 해결됨
+}
+
+model Inquiry {
+  id                 String        @id @default(cuid())
+  type               InquiryType   @default(PRODUCT_QUOTATION)
+  companyName        String
+  country            String
+  website            String?
+  contactPerson      String?
+  email              String
+  phone              String?
+  orderQuantity      String?       // 예상 주문 수량
+  orderTimeline      String?       // 예상 주문 시기
+  targetMarket       String?       // 목표 시장
+  interestedProducts String[]      // 관심 제품 (이름/카테고리 목록)
+  message            String        @db.Text
+  status             InquiryStatus @default(PENDING)
+  adminNotes         String?       @db.Text // 관리자 메모
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("inquiries")
 }
