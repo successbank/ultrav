@@ -1,60 +1,106 @@
-import prisma from "@/lib/prisma"
-import { Card } from "@/components/ui/Card"
-import { Button } from "@/components/ui/Button"
-import { Eye, Shield, User as UserIcon, Building2, Briefcase } from "lucide-react"
-import Link from "next/link"
-import { UserRole } from "@prisma/client"
+import prisma from "@/lib/prisma";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import {
+  Eye,
+  Shield,
+  User as UserIcon,
+  Building2,
+  Briefcase,
+  Globe,
+} from "lucide-react";
+import Link from "next/link";
+import { UserRole } from "@prisma/client";
 
 // 사용자 역할별 표시 정보
 const getRoleInfo = (role: UserRole) => {
   switch (role) {
-    case 'ADMIN':
+    case "ADMIN":
       return {
-        label: '최고관리자',
-        color: 'bg-purple-100 text-purple-800',
-        icon: Shield
-      }
-    case 'HOSPITAL':
+        label: "최고관리자",
+        color: "bg-purple-100 text-purple-800",
+        icon: Shield,
+      };
+    case "HOSPITAL":
       return {
-        label: '병원',
-        color: 'bg-blue-100 text-blue-800',
-        icon: Building2
-      }
-    case 'SALES_MANAGER':
+        label: "병원",
+        color: "bg-blue-100 text-blue-800",
+        icon: Building2,
+      };
+    case "SALES_MANAGER":
       return {
-        label: '영업매니저',
-        color: 'bg-green-100 text-green-800',
-        icon: Briefcase
-      }
+        label: "영업매니저",
+        color: "bg-green-100 text-green-800",
+        icon: Briefcase,
+      };
     default: // USER
       return {
-        label: '일반회원',
-        color: 'bg-gray-100 text-gray-800',
-        icon: UserIcon
-      }
+        label: "일반회원",
+        color: "bg-gray-100 text-gray-800",
+        icon: UserIcon,
+      };
   }
-}
+};
 
-export default async function AdminUsersPage() {
-  const users = await prisma.user.findMany({
-    include: {
-      _count: {
-        select: {
-          orders: true,
-          reviews: true
-        }
-      }
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
-  })
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: { tab?: string };
+}) {
+  // 탭: 한국어 회원(기본) / 영어(기타 언어권) 회원
+  const isEnTab = searchParams.tab === "en";
+
+  const [users, koCount, enCount] = await Promise.all([
+    prisma.user.findMany({
+      where: { locale: isEnTab ? "EN" : "KO" },
+      include: {
+        _count: {
+          select: {
+            orders: true,
+            reviews: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+    prisma.user.count({ where: { locale: "KO" } }),
+    prisma.user.count({ where: { locale: "EN" } }),
+  ]);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">사용자 관리</h1>
-        <p className="text-gray-600 mt-2">총 {users.length}명의 사용자</p>
+        <p className="text-gray-600 mt-2">
+          총 {koCount + enCount}명의 사용자 · 현재 탭 {users.length}명
+        </p>
+      </div>
+
+      {/* 한국어 / 영어(기타 언어권) 탭 */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        <Link
+          href="/admin/users"
+          className={`px-6 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+            !isEnTab
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          한국어 회원 ({koCount})
+        </Link>
+        <Link
+          href="/admin/users?tab=en"
+          className={`flex items-center gap-1.5 px-6 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+            isEnTab
+              ? "border-blue-600 text-blue-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <Globe className="w-4 h-4" />
+          영어 · 기타 언어권 ({enCount})
+        </Link>
       </div>
 
       <Card>
@@ -62,15 +108,39 @@ export default async function AdminUsersPage() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">사용자</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">연락처</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">역할</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">주문 수</th>
-                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">가입일</th>
-                <th className="text-right px-6 py-3 text-sm font-medium text-gray-900">액션</th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">
+                  사용자
+                </th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">
+                  연락처
+                </th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">
+                  역할
+                </th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">
+                  주문 수
+                </th>
+                <th className="text-left px-6 py-3 text-sm font-medium text-gray-900">
+                  가입일
+                </th>
+                <th className="text-right px-6 py-3 text-sm font-medium text-gray-900">
+                  액션
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
+              {users.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-12 text-center text-gray-500"
+                  >
+                    {isEnTab
+                      ? "영어권 가입 회원이 없습니다 (영문 사이트 /en/signup 가입 시 이 탭에 표시됩니다)"
+                      : "한국어 회원이 없습니다"}
+                  </td>
+                </tr>
+              )}
               {users.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
@@ -79,27 +149,35 @@ export default async function AdminUsersPage() {
                         <UserIcon className="w-5 h-5 text-gray-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{user.name || '이름 없음'}</p>
+                        <p className="font-medium text-gray-900">
+                          {user.name || "이름 없음"}
+                        </p>
                         <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{user.phone || '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {user.phone || "-"}
+                  </td>
                   <td className="px-6 py-4">
                     {(() => {
-                      const roleInfo = getRoleInfo(user.role)
-                      const RoleIcon = roleInfo.icon
+                      const roleInfo = getRoleInfo(user.role);
+                      const RoleIcon = roleInfo.icon;
                       return (
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${roleInfo.color}`}>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${roleInfo.color}`}
+                        >
                           <RoleIcon className="w-3 h-3" />
                           {roleInfo.label}
                         </span>
-                      )
+                      );
                     })()}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{user._count.orders}건</td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {new Date(user.createdAt).toLocaleDateString('ko-KR')}
+                    {user._count.orders}건
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {new Date(user.createdAt).toLocaleDateString("ko-KR")}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Link href={`/admin/users/${user.id}`}>
@@ -115,5 +193,5 @@ export default async function AdminUsersPage() {
         </div>
       </Card>
     </div>
-  )
+  );
 }

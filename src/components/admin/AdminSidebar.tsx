@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
@@ -9,13 +9,15 @@ import {
   FolderTree,
   Users,
   MessageSquare,
+  Megaphone,
   BarChart3,
   Settings,
   LogOut,
-  FileText
-} from "lucide-react"
-import { signOut } from "next-auth/react"
-import { Button } from "@/components/ui/Button"
+  FileText,
+  Globe,
+} from "lucide-react";
+import { signOut } from "next-auth/react";
+import { Button } from "@/components/ui/Button";
 
 const navigation = [
   { name: "대시보드", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -25,12 +27,14 @@ const navigation = [
   { name: "카테고리", href: "/admin/categories", icon: FolderTree },
   { name: "사용자 관리", href: "/admin/users", icon: Users },
   { name: "리뷰 관리", href: "/admin/reviews", icon: MessageSquare },
+  { name: "영문 문의", href: "/admin/inquiries", icon: Globe },
+  { name: "공지사항 관리", href: "/admin/notices", icon: Megaphone },
   { name: "통계/리포트", href: "/admin/reports", icon: BarChart3 },
   { name: "시스템 설정", href: "/admin/settings", icon: Settings },
-]
+];
 
 export default function AdminSidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white flex flex-col">
@@ -48,8 +52,9 @@ export default function AdminSidebar() {
       <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-2">
           {navigation.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+            const Icon = item.icon;
+            const isActive =
+              pathname === item.href || pathname.startsWith(item.href + "/");
 
             return (
               <li key={item.name}>
@@ -65,7 +70,7 @@ export default function AdminSidebar() {
                   <span>{item.name}</span>
                 </Link>
               </li>
-            )
+            );
           })}
         </ul>
       </nav>
@@ -82,5 +87,5 @@ export default function AdminSidebar() {
         </Button>
       </div>
     </aside>
-  )
+  );
 }
