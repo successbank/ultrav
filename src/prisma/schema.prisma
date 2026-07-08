@@ -446,6 +446,15 @@ model Notice {
   @@map("notices")
 }
 
+// 문의 알림 수신 이메일 (시스템 설정, 최대 3개 — API에서 제한)
+model NotificationEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("notification_emails")
+}
+
 // Inquiry (영문 사이트 B2B 문의) Models
 enum InquiryType {
   PRODUCT_QUOTATION // 제품 견적 요청

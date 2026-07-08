@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { sendInquiryNotification } from "@/lib/mailer";
 
 // 영문 B2B 사이트 문의(Inquiry) — 로그인 없이 공개 접근 허용 (middleware.ts에서 /api/inquiries 예외 처리됨)
 const inquirySchema = z.object({
@@ -46,6 +47,27 @@ export async function POST(request: NextRequest) {
         interestedProducts: validatedData.interestedProducts,
         message: validatedData.message,
       },
+    });
+
+    await sendInquiryNotification({
+      locale: "EN",
+      subject: `[ULTRAVMALL] New inquiry from ${validatedData.companyName} (${validatedData.country})`,
+      html: `
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">
+          <tr><td><strong>Type</strong></td><td>${validatedData.type}</td></tr>
+          <tr><td><strong>Company Name</strong></td><td>${validatedData.companyName}</td></tr>
+          <tr><td><strong>Country</strong></td><td>${validatedData.country}</td></tr>
+          <tr><td><strong>Website</strong></td><td>${validatedData.website || "-"}</td></tr>
+          <tr><td><strong>Contact Person</strong></td><td>${validatedData.contactPerson || "-"}</td></tr>
+          <tr><td><strong>Email</strong></td><td>${validatedData.email}</td></tr>
+          <tr><td><strong>Phone</strong></td><td>${validatedData.phone || "-"}</td></tr>
+          <tr><td><strong>Order Quantity</strong></td><td>${validatedData.orderQuantity}</td></tr>
+          <tr><td><strong>Order Timeline</strong></td><td>${validatedData.orderTimeline || "-"}</td></tr>
+          <tr><td><strong>Target Market</strong></td><td>${validatedData.targetMarket || "-"}</td></tr>
+          <tr><td><strong>Interested Products</strong></td><td>${validatedData.interestedProducts.join(", ") || "-"}</td></tr>
+          <tr><td><strong>Message</strong></td><td>${validatedData.message}</td></tr>
+        </table>
+      `,
     });
 
     return NextResponse.json(
