@@ -1,61 +1,64 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Edit, Eye, Trash2 } from 'lucide-react'
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Edit, Eye, Trash2 } from "lucide-react";
 
 interface ProductActionsProps {
-  productId: string
-  productName: string
+  productId: string;
+  productName: string;
+  /** 영어 탭에서 사용 시 true — 바로보기가 영문 상세(/en/products)로 연결됨 */
+  en?: boolean;
 }
 
 export default function ProductActions({
   productId,
   productName,
+  en = false,
 }: ProductActionsProps) {
-  const router = useRouter()
-  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
     if (
       !confirm(
-        `정말로 "${productName}" 상품을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+        `정말로 "${productName}" 상품을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
       )
     ) {
-      return
+      return;
     }
 
-    setIsDeleting(true)
+    setIsDeleting(true);
 
     try {
       const response = await fetch(`/api/admin/products/${productId}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (response.ok) {
-        alert('상품이 삭제되었습니다')
-        router.refresh()
+        alert("상품이 삭제되었습니다");
+        router.refresh();
       } else {
-        const error = await response.json()
-        alert(error.error || '상품 삭제에 실패했습니다')
+        const error = await response.json();
+        alert(error.error || "상품 삭제에 실패했습니다");
       }
     } catch (error) {
-      console.error('상품 삭제 실패:', error)
-      alert('상품 삭제에 실패했습니다')
+      console.error("상품 삭제 실패:", error);
+      alert("상품 삭제에 실패했습니다");
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   return (
     <div className="flex items-center gap-2">
       {/* 바로보기 */}
       <Link
-        href={`/products/${productId}`}
+        href={en ? `/en/products/${productId}` : `/products/${productId}`}
         target="_blank"
         className="inline-flex items-center gap-1 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        title="상품 페이지 보기"
+        title={en ? "영문 상품 페이지 보기" : "상품 페이지 보기"}
       >
         <Eye size={16} />
       </Link>
@@ -79,5 +82,5 @@ export default function ProductActions({
         <Trash2 size={16} />
       </button>
     </div>
-  )
+  );
 }

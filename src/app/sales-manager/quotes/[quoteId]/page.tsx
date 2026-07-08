@@ -30,6 +30,7 @@ interface QuoteDetail {
     id: string
     email: string
     name: string | null
+    phone: string | null
   }
   items: Array<{
     id: string

@@ -9,8 +9,8 @@ interface Review {
   rating: number
   comment: string | null
   images: string[]
-  createdAt: string
-  updatedAt: string
+  createdAt: string | Date
+  updatedAt: string | Date
   user: {
     id: string
     name: string | null

@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
         {/* 데모 안내 */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <p className="text-xs text-gray-600 text-center">
-            데모 계정: admin@ultra.com / admin123!@#
+            데모 계정: admin@ultra.com / 1234!@#$
           </p>
         </div>
       </Card>

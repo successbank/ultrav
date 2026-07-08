@@ -14,6 +14,7 @@ export default async function AdminCategoriesPage() {
     },
     orderBy: [
       { level: 'asc' },
+      { sortOrder: 'asc' },
       { name: 'asc' }
     ]
   })

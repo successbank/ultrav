@@ -1,33 +1,33 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
-import { Card } from "@/components/ui/Card"
-import { Button } from "@/components/ui/Button"
-import { Input } from "@/components/ui/Input"
-import { ArrowLeft, Save, X } from "lucide-react"
-import ImageUploader from "@/components/admin/ImageUploader"
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { ArrowLeft, Save, X } from "lucide-react";
+import ImageUploader from "@/components/admin/ImageUploader";
 
 interface CarouselData {
-  title: string
-  subtitle: string
-  description: string
-  imageUrl: string
-  linkUrl: string
-  linkText: string
-  order: number
-  isActive: boolean
+  title: string;
+  subtitle: string;
+  description: string;
+  imageUrl: string;
+  linkUrl: string;
+  linkText: string;
+  order: number;
+  isActive: boolean;
 }
 
 export default function EditCarouselPage() {
-  const params = useParams()
-  const router = useRouter()
-  const carouselId = params.id as string
+  const params = useParams();
+  const router = useRouter();
+  const carouselId = params.id as string;
 
-  const [loading, setLoading] = useState(false)
-  const [fetching, setFetching] = useState(true)
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [formData, setFormData] = useState<CarouselData>({
     title: "",
     subtitle: "",
@@ -37,18 +37,18 @@ export default function EditCarouselPage() {
     linkText: "",
     order: 0,
     isActive: true,
-  })
+  });
 
   useEffect(() => {
-    fetchCarousel()
-  }, [carouselId])
+    fetchCarousel();
+  }, [carouselId]);
 
   const fetchCarousel = async () => {
     try {
-      setFetching(true)
-      const response = await fetch(`/api/admin/carousels/${carouselId}`)
-      if (!response.ok) throw new Error("캐러셀 조회 실패")
-      const data = await response.json()
+      setFetching(true);
+      const response = await fetch(`/api/admin/carousels/${carouselId}`);
+      if (!response.ok) throw new Error("캐러셀 조회 실패");
+      const data = await response.json();
       setFormData({
         title: data.title || "",
         subtitle: data.subtitle || "",
@@ -58,48 +58,48 @@ export default function EditCarouselPage() {
         linkText: data.linkText || "",
         order: data.order || 0,
         isActive: data.isActive,
-      })
+      });
     } catch (error: any) {
-      alert(error.message)
-      router.push("/admin/settings/carousels")
+      alert(error.message);
+      router.push("/admin/settings/carousels");
     } finally {
-      setFetching(false)
+      setFetching(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!formData.title || !formData.imageUrl) {
-      alert("제목과 이미지는 필수입니다")
-      return
+      alert("제목과 이미지는 필수입니다");
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch(`/api/admin/carousels/${carouselId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      })
+      });
 
-      if (!response.ok) throw new Error("캐러셀 수정 실패")
+      if (!response.ok) throw new Error("캐러셀 수정 실패");
 
-      alert("캐러셀이 수정되었습니다")
-      router.push("/admin/settings/carousels")
+      alert("캐러셀이 수정되었습니다");
+      router.push("/admin/settings/carousels");
     } catch (error: any) {
-      alert(error.message)
+      alert(error.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleImageUploaded = (url: string) => {
-    setFormData({ ...formData, imageUrl: url })
-  }
+    setFormData({ ...formData, imageUrl: url });
+  };
 
   if (fetching) {
-    return <div className="text-center py-12">로딩 중...</div>
+    return <div className="text-center py-12">로딩 중...</div>;
   }
 
   return (
@@ -141,7 +141,15 @@ export default function EditCarouselPage() {
                 </button>
               </div>
             )}
-            {!formData.imageUrl && <ImageUploader onImageUploaded={handleImageUploaded} />}
+            {!formData.imageUrl && (
+              <ImageUploader
+                images={[]}
+                maxImages={1}
+                onChange={(images) =>
+                  images[0] && handleImageUploaded(images[0])
+                }
+              />
+            )}
           </div>
 
           {/* 제목 */}
@@ -151,7 +159,9 @@ export default function EditCarouselPage() {
             </label>
             <Input
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               placeholder="캐러셀 제목"
               required
             />
@@ -159,20 +169,28 @@ export default function EditCarouselPage() {
 
           {/* 부제목 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">부제목</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              부제목
+            </label>
             <Input
               value={formData.subtitle}
-              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, subtitle: e.target.value })
+              }
               placeholder="캐러셀 부제목 (선택사항)"
             />
           </div>
 
           {/* 설명 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">설명</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              설명
+            </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               placeholder="캐러셀 설명"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={3}
@@ -181,10 +199,14 @@ export default function EditCarouselPage() {
 
           {/* 링크 URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">링크 URL</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              링크 URL
+            </label>
             <Input
               value={formData.linkUrl}
-              onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, linkUrl: e.target.value })
+              }
               placeholder="클릭시 이동할 URL (예: /products/123)"
             />
           </div>
@@ -196,21 +218,29 @@ export default function EditCarouselPage() {
             </label>
             <Input
               value={formData.linkText}
-              onChange={(e) => setFormData({ ...formData, linkText: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, linkText: e.target.value })
+              }
               placeholder="버튼 텍스트 (예: 자세히 보기)"
             />
           </div>
 
           {/* 순서 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">표시 순서</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              표시 순서
+            </label>
             <Input
               type="number"
               value={formData.order}
-              onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+              onChange={(e) =>
+                setFormData({ ...formData, order: parseInt(e.target.value) })
+              }
               min={0}
             />
-            <p className="text-xs text-gray-500 mt-1">낮은 숫자가 먼저 표시됩니다</p>
+            <p className="text-xs text-gray-500 mt-1">
+              낮은 숫자가 먼저 표시됩니다
+            </p>
           </div>
 
           {/* 활성화 */}
@@ -219,10 +249,15 @@ export default function EditCarouselPage() {
               type="checkbox"
               id="isActive"
               checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+              onChange={(e) =>
+                setFormData({ ...formData, isActive: e.target.checked })
+              }
               className="w-4 h-4 text-blue-600 rounded"
             />
-            <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="isActive"
+              className="text-sm font-medium text-gray-700"
+            >
               활성화 (체크시 즉시 메인페이지에 표시)
             </label>
           </div>
@@ -242,5 +277,5 @@ export default function EditCarouselPage() {
         </Card>
       </form>
     </div>
-  )
+  );
 }

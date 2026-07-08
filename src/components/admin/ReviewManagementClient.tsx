@@ -9,7 +9,7 @@ interface Review {
   rating: number
   comment: string | null
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  createdAt: string
+  createdAt: string | Date
   user: {
     id: string
     name: string | null
@@ -178,7 +178,13 @@ export default function ReviewManagementClient({ initialReviews, initialStats }:
   )
 }
 
-function StatsCard({ label, count, color, onClick, active }: any) {
+function StatsCard({ label, count, color, onClick, active }: {
+  label: string
+  count: number
+  color: 'gray' | 'yellow' | 'green' | 'red'
+  onClick: () => void
+  active: boolean
+}) {
   const colors = {
     gray: 'bg-gray-100 text-gray-900',
     yellow: 'bg-yellow-100 text-yellow-900',

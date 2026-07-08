@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import LayerPopup from '@/components/home/LayerPopup'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -15,12 +16,16 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // 이미 로그인된 사용자는 메인페이지로 리다이렉트
+  // 이미 로그인된 사용자는 역할에 따라 리다이렉트
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/')
+      if (session?.user?.role === 'ADMIN') {
+        router.push('/admin/dashboard')
+      } else {
+        router.push('/')
+      }
     }
-  }, [status, router])
+  }, [status, session, router])
 
   // 로그인 폼 상태
   const [loginForm, setLoginForm] = useState({
@@ -53,7 +58,14 @@ export default function LoginPage() {
       if (result?.error) {
         setError('이메일 또는 비밀번호가 올바르지 않습니다.')
       } else {
-        router.push('/')
+        const res = await fetch('/api/auth/session')
+        const updatedSession = await res.json()
+
+        if (updatedSession?.user?.role === 'ADMIN') {
+          router.push('/admin/dashboard')
+        } else {
+          router.push('/')
+        }
         router.refresh()
       }
     } catch (err) {
@@ -122,6 +134,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+      <LayerPopup />
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">

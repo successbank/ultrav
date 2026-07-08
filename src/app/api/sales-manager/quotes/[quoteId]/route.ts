@@ -52,6 +52,7 @@ export async function GET(request: Request, { params }: RouteParams) {
             id: true,
             email: true,
             name: true,
+            phone: true,
           },
         },
         items: {

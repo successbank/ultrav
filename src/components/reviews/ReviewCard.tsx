@@ -12,8 +12,8 @@ interface Review {
   rating: number
   comment: string | null
   images: string[]
-  createdAt: string
-  updatedAt: string
+  createdAt: string | Date
+  updatedAt: string | Date
   user: {
     id: string
     name: string | null
@@ -39,7 +39,7 @@ export default function ReviewCard({ review, isVerifiedPurchase = true, onDelete
 
   const isOwnReview = session?.user?.id === review.user.id
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString)
     return new Intl.DateTimeFormat('ko-KR', {
       year: 'numeric',
@@ -48,7 +48,7 @@ export default function ReviewCard({ review, isVerifiedPurchase = true, onDelete
     }).format(date)
   }
 
-  const getRelativeTime = (dateString: string) => {
+  const getRelativeTime = (dateString: string | Date) => {
     const date = new Date(dateString)
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
@@ -66,7 +66,7 @@ export default function ReviewCard({ review, isVerifiedPurchase = true, onDelete
   useEffect(() => {
     setFormattedDate(formatDate(review.createdAt))
     setRelativeTime(getRelativeTime(review.createdAt))
-    if (review.createdAt !== review.updatedAt) {
+    if (new Date(review.createdAt).getTime() !== new Date(review.updatedAt).getTime()) {
       setUpdatedDate(formatDate(review.updatedAt))
     }
   }, [review.createdAt, review.updatedAt])
@@ -192,7 +192,7 @@ export default function ReviewCard({ review, isVerifiedPurchase = true, onDelete
       )}
 
       {/* 수정됨 표시 */}
-      {review.createdAt !== review.updatedAt && updatedDate && (
+      {new Date(review.createdAt).getTime() !== new Date(review.updatedAt).getTime() && updatedDate && (
         <p className="mt-2 text-xs text-gray-500">
           (수정됨: {updatedDate})
         </p>

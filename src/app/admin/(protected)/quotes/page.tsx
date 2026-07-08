@@ -268,28 +268,28 @@ export default function AdminQuotesPage() {
       {/* 필터 */}
       <div className="flex gap-2">
         <Button
-          variant={statusFilter === "all" ? "default" : "outline"}
+          variant={statusFilter === "all" ? "primary" : "outline"}
           size="sm"
           onClick={() => setStatusFilter("all")}
         >
           전체
         </Button>
         <Button
-          variant={statusFilter === "SENT" ? "default" : "outline"}
+          variant={statusFilter === "SENT" ? "primary" : "outline"}
           size="sm"
           onClick={() => setStatusFilter("SENT")}
         >
           전송됨
         </Button>
         <Button
-          variant={statusFilter === "APPROVED" ? "default" : "outline"}
+          variant={statusFilter === "APPROVED" ? "primary" : "outline"}
           size="sm"
           onClick={() => setStatusFilter("APPROVED")}
         >
           승인됨
         </Button>
         <Button
-          variant={statusFilter === "REJECTED" ? "default" : "outline"}
+          variant={statusFilter === "REJECTED" ? "primary" : "outline"}
           size="sm"
           onClick={() => setStatusFilter("REJECTED")}
         >
