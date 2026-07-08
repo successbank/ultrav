@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
@@ -15,6 +16,32 @@ interface PageProps {
   params: Promise<{
     id: string
   }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: { name: true, description: true, imageUrl: true, price: true, discount: true },
+  })
+
+  if (!product) return { title: '상품을 찾을 수 없습니다' }
+
+  const discountedPrice = calculateDiscountedPrice(product.price, product.discount)
+
+  return {
+    title: product.name,
+    description: product.description || `${product.name} - Ultra 쇼핑몰에서 만나보세요.`,
+    openGraph: {
+      title: product.name,
+      description: product.description || `${product.name} - Ultra 쇼핑몰`,
+      ...(product.imageUrl && { images: [{ url: product.imageUrl }] }),
+    },
+    other: {
+      'product:price:amount': String(discountedPrice),
+      'product:price:currency': 'KRW',
+    },
+  }
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {
@@ -47,8 +74,35 @@ export default async function ProductDetailPage({ params }: PageProps) {
       ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length
       : 0
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description || '',
+    image: product.imageUrl || undefined,
+    offers: {
+      '@type': 'Offer',
+      price: discountedPrice,
+      priceCurrency: 'KRW',
+      availability: product.stock > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+    },
+    ...(averageRating > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: averageRating.toFixed(1),
+        reviewCount: product.reviews.length,
+      },
+    }),
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="mb-8 text-sm">
