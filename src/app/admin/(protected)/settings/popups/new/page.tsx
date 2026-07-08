@@ -9,15 +9,20 @@ import { Input } from "@/components/ui/Input";
 import { ArrowLeft, Save, ImageIcon, Code, LayoutTemplate } from "lucide-react";
 import ImageUploader from "@/components/admin/ImageUploader";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import InlineHtmlEditor from "@/components/admin/InlineHtmlEditor";
 import { popupTemplates } from "@/lib/popupTemplates";
 
 export default function NewPopupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  // 콘텐츠 편집 모드: 웹에디터(기본) / HTML 소스
-  // 템플릿은 div·표 기반 레이아웃이라 웹에디터(Quill) 변환 시 깨질 수 있어 HTML 모드로 편집
-  const [editorMode, setEditorMode] = useState<"editor" | "html">("editor");
+  // 콘텐츠 편집 모드: 간편 편집(레이아웃 보존 시각 편집) / 웹에디터 / HTML 소스
+  // 템플릿은 div·표 레이아웃이라 웹에디터(Quill)로 열면 깨짐 → 템플릿 선택 시 간편 편집 모드로 진입
+  const [editorMode, setEditorMode] = useState<"visual" | "editor" | "html">(
+    "editor",
+  );
+  // 간편 편집기는 커서 보존을 위해 초기 HTML을 1회만 주입 — 내용 교체 시 key로 리마운트
+  const [visualKey, setVisualKey] = useState(0);
   const [formData, setFormData] = useState({
     title: "",
     contentType: "image" as "image" | "html",
@@ -47,21 +52,25 @@ export default function NewPopupPage() {
       height: template.height,
       title: `[템플릿] ${template.name}`,
     });
-    setEditorMode("html"); // 템플릿 레이아웃 보존을 위해 HTML 소스 모드로 전환
+    setEditorMode("visual"); // 템플릿은 레이아웃 보존형 간편 편집 모드로 진입
+    setVisualKey((k) => k + 1);
     setShowPreview(false);
   };
 
-  const handleEditorModeChange = (mode: "editor" | "html") => {
+  const handleEditorModeChange = (mode: "visual" | "editor" | "html") => {
     if (mode === editorMode) return;
-    // HTML → 웹에디터 전환 시 복잡한 레이아웃(템플릿 등)은 단순화될 수 있음을 경고
+    // 웹에디터(Quill) 전환 시 복잡한 레이아웃(템플릿 등)은 단순화될 수 있음을 경고
     if (
       mode === "editor" &&
       /<(div|table|section)[\s>]/i.test(formData.content)
     ) {
       const confirmed = window.confirm(
-        "웹에디터로 전환하면 템플릿 등 복잡한 레이아웃(표·영역 구조)이 단순화될 수 있습니다.\n전환할까요?",
+        "웹에디터로 전환하면 템플릿 등 복잡한 레이아웃(표·영역 구조)이 단순화될 수 있습니다.\n템플릿 문구 수정은 '간편 편집'을 이용하세요.\n그래도 전환할까요?",
       );
       if (!confirmed) return;
+    }
+    if (mode === "visual") {
+      setVisualKey((k) => k + 1); // 최신 content로 리마운트
     }
     setEditorMode(mode);
     setShowPreview(false);
@@ -258,8 +267,19 @@ export default function NewPopupPage() {
                   <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
                     <button
                       type="button"
-                      onClick={() => handleEditorModeChange("editor")}
+                      onClick={() => handleEditorModeChange("visual")}
                       className={`px-3 py-1.5 transition-colors ${
+                        editorMode === "visual"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      간편 편집
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEditorModeChange("editor")}
+                      className={`px-3 py-1.5 border-l border-gray-300 transition-colors ${
                         editorMode === "editor"
                           ? "bg-blue-600 text-white"
                           : "bg-white text-gray-600 hover:bg-gray-50"
@@ -293,6 +313,15 @@ export default function NewPopupPage() {
                   className="border rounded-lg p-4 min-h-[200px] max-h-[400px] overflow-auto bg-white"
                   dangerouslySetInnerHTML={{ __html: formData.content }}
                 />
+              ) : editorMode === "visual" ? (
+                <InlineHtmlEditor
+                  key={visualKey}
+                  initialHtml={formData.content}
+                  width={formData.width}
+                  onChange={(html) =>
+                    setFormData((prev) => ({ ...prev, content: html }))
+                  }
+                />
               ) : editorMode === "editor" ? (
                 <RichTextEditor
                   value={formData.content}
@@ -312,9 +341,11 @@ export default function NewPopupPage() {
                 />
               )}
               <p className="text-xs text-gray-500 mt-1">
-                {editorMode === "editor"
-                  ? "웹에디터로 자유롭게 작성합니다. 템플릿 선택 시 레이아웃 보존을 위해 HTML 소스 모드로 전환됩니다"
-                  : "인라인 스타일을 포함한 HTML을 직접 입력합니다"}
+                {editorMode === "visual"
+                  ? "템플릿 디자인을 그대로 유지하며 문구만 수정합니다 (템플릿 권장)"
+                  : editorMode === "editor"
+                    ? "웹에디터로 자유롭게 작성합니다. 템플릿 문구 수정은 '간편 편집'을 이용하세요"
+                    : "인라인 스타일을 포함한 HTML을 직접 입력합니다"}
               </p>
             </div>
           )}
